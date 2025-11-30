@@ -39,5 +39,5 @@ class LabResult(models.Model):
     visit = models.ForeignKey(Visit, related_name='lab_results', on_delete=models.CASCADE)
     test_name = models.CharField(max_length=255)
     result_text = models.TextField(blank=True)
-    file = models.FileField(upload_to='lab_results/', null=True, blank=True)  # e.g., PDF or image
+    file = models.FileField(upload_to='lab_results/', null=True, blank=True)  
     created_at = models.DateTimeField(auto_now_add=True)
