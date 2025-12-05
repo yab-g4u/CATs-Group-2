@@ -1,0 +1,139 @@
+{
+  "preamble": {
+    "title": "cardano/aiken",
+    "description": "Aiken contracts for project 'cardano/aiken'",
+    "version": "0.0.0",
+    "plutusVersion": "v3",
+    "compiler": {
+      "name": "Aiken",
+      "version": "v1.1.19+unknown"
+    },
+    "license": "Apache-2.0"
+  },
+  "validators": [
+    {
+      "title": "hello_world.hello_world.spend",
+      "datum": {
+        "title": "datum_opt",
+        "schema": {
+          "$ref": "#/definitions/hello_world~1Datum"
+        }
+      },
+      "redeemer": {
+        "title": "redeemer",
+        "schema": {
+          "$ref": "#/definitions/hello_world~1Redeemer"
+        }
+      },
+      "compiledCode": "58da01010029800aba2aba1aab9faab9eaab9dab9a48888896600264653001300700198039804000cc01c0092225980099b8748008c01cdd500144c8cc896600266e1d2000300a375400d13232598009808001456600266e1d2000300c375400715980099b8f375c601e601a6ea80212210d48656c6c6f2c20576f726c642100899b8f375c601e601a6ea8c03cc034dd5001a4410d48656c6c6f2c20576f726c6421008a50402d16402d1640386eb8c038004c02cdd500345900918058009805980600098041baa0028b200c180380098019baa0078a4d1365640041",
+      "hash": "ae0848b180c1ce22f01f815ba1163f102bbbdd6e68f11c51c14c6e0f"
+    },
+    {
+      "title": "hello_world.hello_world.else",
+      "redeemer": {
+        "schema": {}
+      },
+      "compiledCode": "58da01010029800aba2aba1aab9faab9eaab9dab9a48888896600264653001300700198039804000cc01c0092225980099b8748008c01cdd500144c8cc896600266e1d2000300a375400d13232598009808001456600266e1d2000300c375400715980099b8f375c601e601a6ea80212210d48656c6c6f2c20576f726c642100899b8f375c601e601a6ea8c03cc034dd5001a4410d48656c6c6f2c20576f726c6421008a50402d16402d1640386eb8c038004c02cdd500345900918058009805980600098041baa0028b200c180380098019baa0078a4d1365640041",
+      "hash": "ae0848b180c1ce22f01f815ba1163f102bbbdd6e68f11c51c14c6e0f"
+    },
+    {
+      "title": "referral.referral.spend",
+      "datum": {
+        "title": "datum_opt",
+        "schema": {
+          "$ref": "#/definitions/referral~1Datum"
+        }
+      },
+      "redeemer": {
+        "title": "_redeemer",
+        "schema": {
+          "$ref": "#/definitions/referral~1Redeemer"
+        }
+      },
+      "compiledCode": "59010e01010029800aba2aba1aab9faab9eaab9dab9a48888896600264646644b30013370e900118031baa0018994c004c028006601460160035980099b8748000c01cdd5001c56600260106ea800e2934590094590062444b30013370e900018051baa002899192cc006600266e3cdd71807800a44100a50a51402d15980099199119801001000912cc00400629422b30013371e6eb8c04800400e2946266004004602600280710111bac301030113011301130113011301130113011300e375460200166eb8c03c00a266e252000375a601e602000314a0805a294100b180780098059baa300d300b375400516402430073754003164014600e002600e6010002600e00260066ea801e29344d9590011",
+      "hash": "00fbe84e2d11b227d87226ebb2a9ffe6be84b90c597e8971146ff601"
+    },
+    {
+      "title": "referral.referral.else",
+      "redeemer": {
+        "schema": {}
+      },
+      "compiledCode": "59010e01010029800aba2aba1aab9faab9eaab9dab9a48888896600264646644b30013370e900118031baa0018994c004c028006601460160035980099b8748000c01cdd5001c56600260106ea800e2934590094590062444b30013370e900018051baa002899192cc006600266e3cdd71807800a44100a50a51402d15980099199119801001000912cc00400629422b30013371e6eb8c04800400e2946266004004602600280710111bac301030113011301130113011301130113011300e375460200166eb8c03c00a266e252000375a601e602000314a0805a294100b180780098059baa300d300b375400516402430073754003164014600e002600e6010002600e00260066ea801e29344d9590011",
+      "hash": "00fbe84e2d11b227d87226ebb2a9ffe6be84b90c597e8971146ff601"
+    }
+  ],
+  "definitions": {
+    "ByteArray": {
+      "dataType": "bytes"
+    },
+    "Int": {
+      "dataType": "integer"
+    },
+    "hello_world/Datum": {
+      "title": "Datum",
+      "anyOf": [
+        {
+          "title": "Datum",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "message",
+              "$ref": "#/definitions/ByteArray"
+            }
+          ]
+        }
+      ]
+    },
+    "hello_world/Redeemer": {
+      "title": "Redeemer",
+      "anyOf": [
+        {
+          "title": "Redeemer",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "message",
+              "$ref": "#/definitions/ByteArray"
+            }
+          ]
+        }
+      ]
+    },
+    "referral/Datum": {
+      "title": "Datum",
+      "anyOf": [
+        {
+          "title": "Datum",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "issuer_id",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "referral_hash",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "issued_at",
+              "$ref": "#/definitions/Int"
+            }
+          ]
+        }
+      ]
+    },
+    "referral/Redeemer": {
+      "title": "Redeemer",
+      "anyOf": [
+        {
+          "dataType": "constructor",
+          "index": 0,
+          "fields": []
+        }
+      ]
+    }
+  }
+}
