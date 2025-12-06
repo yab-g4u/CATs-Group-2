@@ -1,226 +1,342 @@
-import { RetroGrid } from "@/components/ui/retro-grid"
+"use client"
+
+import { useState } from "react"
+import Link from "next/link"
+import {
+  LayoutDashboard,
+  Calendar,
+  FileText,
+  MessageSquare,
+  CalendarDays,
+  User,
+  Settings,
+  HelpCircle,
+  Search,
+  Bell,
+  Moon,
+  Sun,
+  Video,
+  Heart,
+  Pill,
+  FlaskConical,
+  Plus,
+  Check,
+} from "lucide-react"
+import { useTheme } from "@/components/theme-provider"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+
+const sidebarNavItems = [
+  { icon: LayoutDashboard, label: "Dashboard", href: "#", active: true },
+  { icon: Calendar, label: "Appointment", href: "#" },
+  { icon: FileText, label: "Record", href: "#" },
+  { icon: MessageSquare, label: "Chat", href: "#" },
+  { icon: CalendarDays, label: "Calendar", href: "#" },
+]
+
+const sidebarBottomItems = [
+  { icon: User, label: "Account", href: "#" },
+  { icon: Settings, label: "Settings", href: "#" },
+  { icon: HelpCircle, label: "Help center", href: "#" },
+]
+
+const tasks = [
+  { id: 1, title: "Order drugs", date: "07.06.2020", completed: true },
+  { id: 2, title: "Start course", date: "10.06.2020", completed: true },
+  { id: 3, title: "Blood test", date: "09:00, 12.06.2020", completed: true },
+  { id: 4, title: "Diagnostic", date: "09:00, 12.06.2020", completed: true },
+  { id: 5, title: "Took tests", date: "13:30, 10.06.2020", completed: false },
+  { id: 6, title: "Consultation", date: "14:00, 10.06.2020", completed: false },
+  { id: 7, title: "Diagnostic", date: "07:00, 12.05.2020", completed: false },
+]
 
 export default function PatientDashboard() {
-  const timeline = [
-    { date: "2025-02-14", title: "Follow-up", detail: "Spine MRI reviewed, stable." },
-    { date: "2024-11-01", title: "Surgery", detail: "Lumbar microdiscectomy completed." },
-    { date: "2024-08-10", title: "Consult", detail: "Initial neurology consultation." },
-  ]
+  const { theme, toggleTheme, mounted } = useTheme()
+  const [taskFilter, setTaskFilter] = useState<"week" | "month">("week")
 
-  const stats = [
-    { label: "Upcoming", value: "2 appointments", tone: "primary" },
-    { label: "Medications", value: "2 active", tone: "muted" },
-    { label: "Alerts", value: "None", tone: "success" },
-  ]
-
-  const meds = [
-    { name: "Gabapentin", dose: "300mg", note: "Twice daily" },
-    { name: "Ibuprofen", dose: "400mg", note: "As needed for pain" },
-  ]
-
-  const reminders = [
-    { title: "Take morning meds", detail: "Gabapentin 300mg", when: "Today 8:00 AM" },
-    { title: "Refill Ibuprofen", detail: "Order 30 tablets", when: "Due in 3 days" },
-    { title: "Prep for visit", detail: "Bring MRI images", when: "Next visit" },
-  ]
-
-  const vitals = [
-    { label: "Blood Pressure", value: "118/76", note: "Stable" },
-    { label: "Weight", value: "72.4 kg", note: "-0.4 kg vs last" },
-    { label: "Heart Rate", value: "68 bpm", note: "Resting" },
-  ]
-
-  const sparklinePoints = [0, 4, 2, 5, 3, 6, 4]
-
-  const labs = [
-    { name: "CBC", date: "2025-01-05", status: "Normal" },
-    { name: "MRI Spine", date: "2024-12-20", status: "Reviewed" },
-  ]
-
-  const appointments = [
-    { date: "2025-03-12", with: "Dr. Abebe (Neuro)", type: "Follow-up" },
-    { date: "2025-04-02", with: "PT Clinic", type: "Physiotherapy" },
-  ]
+  const completedTasks = tasks.filter((t) => t.completed).length
 
   return (
-    <main className="relative min-h-screen bg-background px-6 py-12 overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(59,130,246,0.12),transparent_32%),radial-gradient(circle_at_75%_10%,rgba(59,130,246,0.08),transparent_38%),radial-gradient(circle_at_50%_60%,rgba(59,130,246,0.06),transparent_45%)]" />
-      <RetroGrid className="opacity-45" angle={70} />
-      <div className="relative z-10 mx-auto max-w-7xl space-y-10">
-        <div className="flex flex-col items-center gap-3 text-center">
-          <div className="w-full flex justify-end">
-            <a
-              href="/"
-              className="inline-flex items-center justify-center rounded-lg border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted"
-            >
-              ← Home
-            </a>
+    <div className="flex min-h-screen bg-background">
+      {/* Sidebar */}
+      <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r border-border bg-sidebar">
+        {/* Logo */}
+        <div className="flex items-center gap-2 border-b border-border px-6 py-5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+            <span className="text-sm font-bold text-primary-foreground">S</span>
           </div>
-          <div className="space-y-2 rounded-2xl border border-border bg-muted/30 px-5 py-4 shadow-sm">
-            <p className="text-base font-semibold uppercase tracking-wide text-primary">Patient Dashboard</p>
-            <h1 className="text-4xl font-bold leading-tight bg-gradient-to-r from-primary via-foreground to-foreground/80 bg-clip-text text-transparent sm:text-5xl">
-              Welcome back
-            </h1>
+          <div>
+            <span className="font-bold text-foreground">The Spine</span>
+            <p className="text-xs text-muted-foreground">we care about you</p>
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3">
-          {stats.map((item) => (
-            <div
-              key={item.label}
-              className="rounded-2xl border border-border bg-card px-4 py-4 shadow-sm"
-            >
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">{item.label}</p>
-              <p className="mt-2 text-lg font-semibold text-foreground">{item.value}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="grid gap-8 lg:grid-cols-12">
-          <div className="lg:col-span-7 space-y-6">
-            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-foreground">Medical history timeline</h2>
-                <span className="text-xs text-muted-foreground">Latest first</span>
-              </div>
-              <div className="mt-4 space-y-4">
-                {timeline.map((item) => (
-                  <div key={item.date} className="flex gap-4 rounded-xl border border-border bg-background p-4">
-                    <div className="mt-1 h-10 w-10 rounded-full bg-primary/10 text-center text-xs font-semibold text-primary leading-10">
-                      {item.date.slice(5)}
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">{item.date}</p>
-                      <p className="text-base font-semibold text-foreground">{item.title}</p>
-                      <p className="text-sm text-muted-foreground">{item.detail}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-              <p className="text-sm text-muted-foreground">Health tip</p>
-              <h3 className="text-lg font-semibold text-foreground">Small daily moves</h3>
-              <p className="mt-3 text-sm text-muted-foreground">
-                Take a 20-minute walk, hydrate with 2L of water, and stretch your lower back after long sitting blocks.
-              </p>
-              <div className="mt-4 rounded-lg bg-primary/5 px-3 py-2 text-xs text-primary">Updated weekly.</div>
-            </div>
-          </div>
-
-          <div className="lg:col-span-5 space-y-6">
-            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">QR code profile</p>
-                  <h2 className="text-xl font-semibold text-foreground">Share securely</h2>
-                </div>
-                <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">QR</span>
-              </div>
-              <div className="mt-5 flex items-center justify-center rounded-xl border border-dashed border-border bg-background p-10">
-                <div className="h-36 w-36 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10" />
-              </div>
-              <p className="mt-3 text-xs text-muted-foreground">Scan to share a read-only summary of your profile.</p>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-foreground">Appointments</h3>
-              <ul className="mt-4 space-y-4">
-                {appointments.map((appt) => (
-                  <li key={`${appt.date}-${appt.with}`} className="rounded-xl bg-background px-4 py-3">
-                    <p className="font-semibold text-foreground">{appt.with}</p>
-                    <p className="text-sm text-muted-foreground">{appt.type}</p>
-                    <p className="text-xs text-muted-foreground">{appt.date}</p>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-5 rounded-xl bg-primary/5 p-4 text-sm text-primary">
-                Emergency contact: +251 911 223344
-              </div>
+        {/* User Profile */}
+        <div className="border-b border-border px-6 py-4">
+          <div className="glow-card flex items-center gap-3 rounded-xl p-3">
+            <Avatar className="h-10 w-10 border-2 border-primary/50">
+              <AvatarImage src="/ethiopian-woman-portrait.jpg" />
+              <AvatarFallback>SL</AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="font-semibold text-foreground">Sierra Lisbon</p>
+              <p className="text-xs text-muted-foreground">s.ferguson@gmail.com</p>
             </div>
           </div>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-12">
-          <div className="lg:col-span-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-foreground">Medications</h3>
-            <ul className="mt-4 space-y-3">
-              {meds.map((med) => (
-                <li key={med.name} className="flex items-center justify-between rounded-lg bg-background px-3 py-2">
-                  <div>
-                    <p className="font-semibold text-foreground">{med.name}</p>
-                    <p className="text-xs text-muted-foreground">{med.note}</p>
-                  </div>
-                  <span className="text-xs font-semibold text-primary">{med.dose}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+        {/* Navigation */}
+        <nav className="flex-1 px-4 py-4">
+          <ul className="space-y-1">
+            {sidebarNavItems.map((item) => (
+              <li key={item.label}>
+                <Link
+                  href={item.href}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+                    item.active
+                      ? "glow-card bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  }`}
+                >
+                  <item.icon className="h-5 w-5" />
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
 
-          <div className="lg:col-span-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-foreground">Lab results</h3>
-            <ul className="mt-4 space-y-3">
-              {labs.map((lab) => (
-                <li key={lab.name} className="flex items-center justify-between rounded-lg bg-background px-3 py-2">
-                  <div>
-                    <p className="font-semibold text-foreground">{lab.name}</p>
-                    <p className="text-xs text-muted-foreground">{lab.date}</p>
-                  </div>
-                  <span className="text-xs font-semibold text-primary">{lab.status}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="lg:col-span-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-foreground">Reminders & tasks</h3>
-            <ul className="mt-3 space-y-3 text-sm text-muted-foreground">
-              {reminders.map((item) => (
-                <li key={item.title} className="rounded-lg bg-background px-3 py-2">
-                  <p className="font-semibold text-foreground">{item.title}</p>
-                  <p>{item.detail}</p>
-                  <p className="text-xs text-muted-foreground">{item.when}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
+        {/* Bottom Navigation */}
+        <div className="border-t border-border px-4 py-4">
+          <ul className="space-y-1">
+            {sidebarBottomItems.map((item) => (
+              <li key={item.label}>
+                <Link
+                  href={item.href}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:bg-secondary hover:text-foreground"
+                >
+                  <item.icon className="h-5 w-5" />
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
+      </aside>
 
-        <div className="grid gap-8 lg:grid-cols-12">
-          <div className="lg:col-span-5 rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-foreground">Vitals & trends</h3>
-            <div className="mt-4 grid grid-cols-3 gap-3">
-              {vitals.map((vital) => (
-                <div key={vital.label} className="rounded-lg bg-background px-3 py-3">
-                  <p className="text-xs text-muted-foreground">{vital.label}</p>
-                  <p className="text-lg font-semibold text-foreground">{vital.value}</p>
-                  <p className="text-xs text-muted-foreground">{vital.note}</p>
-                </div>
-              ))}
-            </div>
+      {/* Main Content */}
+      <main className="ml-64 flex-1">
+        {/* Top Header */}
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/80 px-8 py-4 backdrop-blur-md">
+          <div className="relative w-80">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input placeholder="Global search" className="h-10 bg-secondary/50 pl-10 focus:bg-card" />
           </div>
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-10 w-10 rounded-full">
+              {mounted && theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </Button>
+            <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full">
+              <Bell className="h-5 w-5" />
+              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive" />
+            </Button>
+          </div>
+        </header>
 
-          <div className="lg:col-span-7 rounded-2xl border border-border bg-card p-6 shadow-sm">
+        {/* Dashboard Content */}
+        <div className="flex gap-6 p-8">
+          {/* Left Column */}
+          <div className="flex-1 space-y-6">
+            {/* Greeting */}
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-foreground">Weight trend</h3>
-              <span className="text-xs text-muted-foreground">Last 7 readings</span>
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">
+                  Hello, <span className="glow-text text-primary">Kate!</span>
+                </h1>
+                <p className="mt-1 text-muted-foreground">Have are you feeling today?</p>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="icon" className="glow-card h-12 w-12 rounded-xl bg-transparent">
+                  <MessageSquare className="h-5 w-5 text-primary" />
+                </Button>
+                <Button variant="outline" size="icon" className="glow-card h-12 w-12 rounded-xl bg-transparent">
+                  <Video className="h-5 w-5 text-primary" />
+                </Button>
+              </div>
             </div>
-            <svg viewBox="0 0 140 60" className="mt-4 h-24 w-full text-primary" preserveAspectRatio="none">
-              <polyline
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="3"
-                points={sparklinePoints.map((p, i) => `${(i / (sparklinePoints.length - 1)) * 140},${60 - p * 8}`).join(" ")}
-                vectorEffect="non-scaling-stroke"
-              />
-            </svg>
-            <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="inline-block h-2 w-2 rounded-full bg-primary" /> Weight (kg)
+
+            {/* Doctor and Data Cards */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Your Doctor Card */}
+              <div className="glow-card rounded-2xl p-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="font-semibold text-foreground">Your doctor</h3>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-12 w-12 border-2 border-primary/30">
+                      <AvatarImage src="/ethiopian-male-doctor.jpg" />
+                      <AvatarFallback>NF</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-semibold text-foreground">Nik Friman</p>
+                      <p className="text-sm text-primary">Therapist</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg bg-secondary">
+                      <MessageSquare className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Your Data Card */}
+              <div className="glow-card rounded-2xl p-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="font-semibold text-foreground">Your data</h3>
+                  <button className="text-sm text-primary hover:underline">Change</button>
+                </div>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Weight</p>
+                    <p className="text-xl font-bold text-foreground">58 kg</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Height</p>
+                    <p className="text-xl font-bold text-foreground">1.72 m</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Blood</p>
+                    <p className="text-xl font-bold text-foreground">A+</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Services Section */}
+            <div className="flex gap-6">
+              {/* Service Cards */}
+              <div className="flex flex-1 flex-col gap-3">
+                <div className="glow-card flex items-center justify-between rounded-xl p-4 transition-transform hover:scale-[1.02]">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20">
+                      <Heart className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground">Diagnostic</h4>
+                      <p className="text-sm text-muted-foreground">List of diseases</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="glow-card flex items-center justify-between rounded-xl p-4 transition-transform hover:scale-[1.02]">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/20">
+                      <Pill className="h-6 w-6 text-accent" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground">Drugs</h4>
+                      <p className="text-sm text-muted-foreground">Archive of tests</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="glow-card flex items-center justify-between rounded-xl p-4 transition-transform hover:scale-[1.02]">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-chart-3/20">
+                      <FlaskConical className="h-6 w-6 text-chart-3" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground">Tests</h4>
+                      <p className="text-sm text-muted-foreground">Prescribed medicine</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Reminder */}
+          <div className="w-80">
+            <div className="glow-card rounded-2xl p-5">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="font-semibold text-foreground">Remind me</h3>
+                <div className="flex gap-2 text-sm">
+                  <span className="text-muted-foreground">Show:</span>
+                  <button
+                    onClick={() => setTaskFilter("week")}
+                    className={`${taskFilter === "week" ? "text-primary" : "text-muted-foreground"}`}
+                  >
+                    This week
+                  </button>
+                  <span className="text-muted-foreground">•</span>
+                  <button
+                    onClick={() => setTaskFilter("month")}
+                    className={`${taskFilter === "month" ? "text-primary" : "text-muted-foreground"}`}
+                  >
+                    Month
+                  </button>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="mb-4">
+                <p className="mb-2 text-sm text-muted-foreground">
+                  {completedTasks} task completed out of {tasks.length}
+                </p>
+                <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all"
+                    style={{ width: `${(completedTasks / tasks.length) * 100}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Task List */}
+              <div className="space-y-3">
+                {tasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className={`flex items-center justify-between rounded-xl border p-3 transition-all ${
+                      task.completed
+                        ? "border-primary/30 bg-primary/5"
+                        : "border-border bg-card hover:border-primary/20"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`flex h-6 w-6 items-center justify-center rounded-md ${
+                          task.completed ? "bg-primary text-primary-foreground" : "border border-border"
+                        }`}
+                      >
+                        {task.completed && <Check className="h-4 w-4" />}
+                      </div>
+                      <div>
+                        <p className={`text-sm font-medium ${task.completed ? "text-foreground" : "text-foreground"}`}>
+                          {task.title}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{task.date}</p>
+                      </div>
+                    </div>
+                    <button className="text-xs text-primary hover:underline">Change</button>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </div>
   )
 }
