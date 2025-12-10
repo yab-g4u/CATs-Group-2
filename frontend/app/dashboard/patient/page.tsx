@@ -7,15 +7,11 @@ import {
   Calendar,
   FileText,
   MessageSquare,
-  CalendarDays,
   User,
-  Settings,
-  HelpCircle,
   Search,
   Bell,
   Moon,
   Sun,
-  Video,
   Heart,
   Pill,
   FlaskConical,
@@ -28,17 +24,14 @@ import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 const sidebarNavItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "#", active: true },
-  { icon: Calendar, label: "Appointment", href: "#" },
-  { icon: FileText, label: "Record", href: "#" },
-  { icon: MessageSquare, label: "Chat", href: "#" },
-  { icon: CalendarDays, label: "Calendar", href: "#" },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/patient", active: true },
+  { icon: Calendar, label: "Appointment", href: "/dashboard/patient/appointment" },
+  { icon: FileText, label: "Record", href: "/dashboard/patient/record" },
+  { icon: MessageSquare, label: "Chat", href: "/dashboard/patient/chat" },
 ]
 
 const sidebarBottomItems = [
-  { icon: User, label: "Account", href: "#" },
-  { icon: Settings, label: "Settings", href: "#" },
-  { icon: HelpCircle, label: "Help center", href: "#" },
+  { icon: User, label: "Account", href: "/dashboard/patient/account" },
 ]
 
 const tasks = [
@@ -159,9 +152,6 @@ export default function PatientDashboard() {
               <div className="flex gap-2">
                 <Button variant="outline" size="icon" className="glow-card h-12 w-12 rounded-xl bg-transparent">
                   <MessageSquare className="h-5 w-5 text-primary" />
-                </Button>
-                <Button variant="outline" size="icon" className="glow-card h-12 w-12 rounded-xl bg-transparent">
-                  <Video className="h-5 w-5 text-primary" />
                 </Button>
               </div>
             </div>

@@ -7,10 +7,7 @@ import {
   Calendar,
   FileText,
   MessageSquare,
-  CalendarDays,
   User,
-  Settings,
-  HelpCircle,
   Bell,
   Moon,
   Sun,
@@ -38,20 +35,14 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 const sidebarNavItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "#", active: true },
-  { icon: QrCode, label: "QR Scanner", href: "#qr-scanner" },
-  { icon: Users, label: "Patients", href: "#patients" },
-  { icon: Send, label: "Referrals", href: "#referrals" },
-  { icon: Calendar, label: "Appointments", href: "#appointments" },
-  { icon: MessageSquare, label: "Chat", href: "#chat" },
-  { icon: CalendarDays, label: "Calendar", href: "#" },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/doctor", active: true },
+  { icon: Users, label: "Patients", href: "/dashboard/doctor/patients" },
+  { icon: Send, label: "Referrals", href: "/dashboard/doctor/referrals" },
+  { icon: Calendar, label: "Appointments", href: "/dashboard/doctor/appointments" },
+  { icon: MessageSquare, label: "Chatbot", href: "/dashboard/doctor/chatbot" },
 ]
 
-const sidebarBottomItems = [
-  { icon: User, label: "Account", href: "#" },
-  { icon: Settings, label: "Settings", href: "#" },
-  { icon: HelpCircle, label: "Help center", href: "#" },
-]
+const sidebarBottomItems = [{ icon: User, label: "Account", href: "#" }]
 
 const recentPatients = [
   {
@@ -72,6 +63,12 @@ const appointments = [
   { id: 3, patient: "Yonas Tadesse", time: "11:45 AM", type: "Lab Review", status: "confirmed" },
   { id: 4, patient: "Meron Assefa", time: "02:00 PM", type: "Consultation", status: "confirmed" },
   { id: 5, patient: "Biniam Worku", time: "03:30 PM", type: "Follow-up", status: "pending" },
+]
+
+const notifications = [
+  { id: 1, title: "Lab result ready", detail: "CBC for Abebe Bekele is available", time: "5m ago" },
+  { id: 2, title: "New referral accepted", detail: "Cardiology accepted referral for Hana Girma", time: "18m ago" },
+  { id: 3, title: "Appointment update", detail: "Yonas Tadesse moved to 12:15 PM", time: "30m ago" },
 ]
 
 const patientTimeline = [
@@ -253,7 +250,7 @@ export default function DoctorDashboard() {
               </div>
 
               {/* Recent Patients */}
-              <div className="glow-card rounded-2xl p-5">
+              <div id="patients" className="glow-card rounded-2xl p-5">
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="font-semibold text-foreground">Recent Patients</h3>
                   <button className="text-sm text-primary hover:underline">View All</button>
@@ -279,8 +276,18 @@ export default function DoctorDashboard() {
                               .join("")}
                           </AvatarFallback>
                         </Avatar>
-                        <div>
-                          <p className="font-medium text-foreground">{patient.name}</p>
+                        <div className="space-y-0.5">
+                          <Link
+                            href="#patient-history"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              setSelectedPatient(patient)
+                              document.getElementById("patient-history")?.scrollIntoView({ behavior: "smooth" })
+                            }}
+                            className="font-medium text-foreground hover:text-primary"
+                          >
+                            {patient.name}
+                          </Link>
                           <p className="text-sm text-muted-foreground">{patient.condition}</p>
                         </div>
                       </div>
@@ -299,7 +306,7 @@ export default function DoctorDashboard() {
               </div>
 
               {/* Patient Profile Timeline */}
-              <div className="glow-card rounded-2xl p-5">
+              <div id="patient-history" className="glow-card rounded-2xl p-5">
                 <div className="mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10 border-2 border-primary/30">
@@ -343,8 +350,26 @@ export default function DoctorDashboard() {
               </div>
             </div>
 
-            {/* Right Column - Today's Appointments */}
+            {/* Right Column - Notifications & Today's Appointments */}
             <div className="space-y-6">
+              <div className="glow-card rounded-2xl p-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="font-semibold text-foreground">Notifications</h3>
+                  <span className="text-xs text-muted-foreground">Live feed</span>
+                </div>
+                <div className="space-y-3">
+                  {notifications.map((note) => (
+                    <div key={note.id} className="rounded-xl border border-border bg-card/50 p-3">
+                      <div className="flex items-center justify-between">
+                        <p className="font-medium text-foreground">{note.title}</p>
+                        <span className="text-xs text-muted-foreground">{note.time}</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">{note.detail}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* Today's Appointments */}
               <div className="glow-card rounded-2xl p-5">
                 <div className="mb-4 flex items-center justify-between">
@@ -380,43 +405,6 @@ export default function DoctorDashboard() {
                 </div>
               </div>
 
-              {/* Quick Chat */}
-              <div className="glow-card rounded-2xl p-5">
-                <div className="mb-4 flex items-center justify-between">
-                  <h3 className="font-semibold text-foreground">Quick Chat</h3>
-                  <button className="text-sm text-primary hover:underline">View All</button>
-                </div>
-                <div className="space-y-3">
-                  {recentPatients.slice(0, 3).map((patient) => (
-                    <div
-                      key={patient.id}
-                      className="flex items-center justify-between rounded-xl border border-border bg-card/50 p-3 cursor-pointer transition-all hover:border-primary/20"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="relative">
-                          <Avatar className="h-9 w-9 border border-border">
-                            <AvatarImage src={patient.avatar || "/placeholder.svg"} />
-                            <AvatarFallback>
-                              {patient.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 border-2 border-card" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-foreground">{patient.name}</p>
-                          <p className="text-xs text-muted-foreground">Online</p>
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg">
-                        <MessageSquare className="h-4 w-4 text-primary" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
         </div>

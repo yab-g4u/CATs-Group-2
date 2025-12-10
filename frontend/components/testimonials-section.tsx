@@ -6,21 +6,21 @@ const testimonials = [
       "Still early, but the referral flow already feels faster. If they land the remaining features, this could remove a lot of friction for our team.",
     name: "Dr. Tegegne Abiyot",
     role: "Chief Doctor, Tikur Anbessa Hospital",
-    image: "/ethiopian-male-doctor-professional-headshot.jpg",
+    image: "/frontend/public/Dr.tegegn abiyot.png",
   },
   {
     quote:
       "We're piloting it with a few sites. The promise of consistent patient histories across facilities is exactly what we need—looking forward to the full rollout.",
     name: "Dr. Saron Leulkal",
     role: "Health Post Coordinator, Addis Ababa",
-    image: "/ethiopian-female-doctor-professional-headshot.jpg",
+    image: "/frontend/public/Dr.saron leulkal.png",
   },
   {
     quote:
       "Even in beta, seeing my records in one place is reassuring. If they keep this pace, it'll be a game changer for patients like me.",
-    name: "Ms. Hana Tesfaye",
+    name: "Dr. Rita Tilaye",
     role: "Patient, Digital Healthcare Advocate",
-    image: "/ethiopian-woman-professional-headshot.jpg",
+    image: "/frontend/public/Dr.Rita tilaye.png",
   },
 ]
 
