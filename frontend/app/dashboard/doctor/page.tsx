@@ -25,6 +25,7 @@ import {
   Pill,
   FlaskConical,
   Stethoscope,
+  UserPlus,
 } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
@@ -36,10 +37,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 const sidebarNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/doctor", active: true },
-  { icon: Users, label: "Patients", href: "/dashboard/doctor/patients" },
-  { icon: Send, label: "Referrals", href: "/dashboard/doctor/referrals" },
-  { icon: Calendar, label: "Appointments", href: "/dashboard/doctor/appointments" },
-  { icon: MessageSquare, label: "Chatbot", href: "/dashboard/doctor/chatbot" },
+  { icon: Users, label: "My Patients", href: "/dashboard/doctor/patients" },
+  { icon: UserPlus, label: "Create Patient", href: "/dashboard/doctor/create-patient" },
+  { icon: QrCode, label: "Generate QR", href: "/dashboard/doctor/generate-qr" },
+  { icon: FileText, label: "Records", href: "/dashboard/doctor/records" },
+  { icon: User, label: "Profile", href: "/dashboard/doctor/account" },
 ]
 
 const sidebarBottomItems = [{ icon: User, label: "Account", href: "#" }]

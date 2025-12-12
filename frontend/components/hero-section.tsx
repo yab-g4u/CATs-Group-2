@@ -1,3 +1,5 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { ArrowRight, QrCode } from "lucide-react"
 import Link from "next/link"
@@ -13,9 +15,9 @@ export function HeroSection() {
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold text-foreground mb-6 leading-tight text-balance">
-            Portable Medical Records
+            Your medical history.
             <span className="block bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent glow-text">
-              at Your Fingertips
+              One ID. Everywhere.
             </span>
           </h1>
 
@@ -24,14 +26,34 @@ export function HeroSection() {
             Complete medical history. Smarter referrals between clinics and hospitals.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/get-started">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 w-full sm:w-auto">
+            <Link href="/dashboard/doctor/register" className="w-full sm:w-auto">
               <Button
                 size="lg"
-                className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white border-0 px-8 h-12 text-base"
+                className="w-full sm:w-auto bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white border-0 px-6 sm:px-8 h-12 text-sm sm:text-base"
               >
-                Get Started
-                <ArrowRight className="ml-2 w-5 h-5" />
+                For Doctors
+                <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
+              </Button>
+            </Link>
+            <Link href="/for-hospitals" className="w-full sm:w-auto">
+              <Button
+                size="lg"
+                variant="outline"
+                className="w-full sm:w-auto border-2 border-primary/30 hover:bg-primary/10 px-6 sm:px-8 h-12 text-sm sm:text-base"
+              >
+                For Hospitals
+                <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
+              </Button>
+            </Link>
+            <Link href="/patient-access" className="w-full sm:w-auto">
+              <Button
+                size="lg"
+                variant="outline"
+                className="w-full sm:w-auto border-2 border-primary/30 hover:bg-primary/10 px-6 sm:px-8 h-12 text-sm sm:text-base"
+              >
+                Access Your Record
+                <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
             </Link>
           </div>

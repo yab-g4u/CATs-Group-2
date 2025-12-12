@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import {
   LayoutDashboard,
   Calendar,
@@ -17,6 +18,15 @@ import {
   FlaskConical,
   Plus,
   Check,
+  QrCode,
+  Download,
+  History,
+  ArrowRight,
+  Menu,
+  X,
+  Copy,
+  CheckCircle2,
+  Shield,
 } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
@@ -47,52 +57,96 @@ const tasks = [
 export default function PatientDashboard() {
   const { theme, toggleTheme, mounted } = useTheme()
   const [taskFilter, setTaskFilter] = useState<"week" | "month">("week")
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [copiedId, setCopiedId] = useState(false)
+  const [copiedHash, setCopiedHash] = useState(false)
 
   const completedTasks = tasks.filter((t) => t.completed).length
 
+  // Mock data - in real app, this comes from API
+  const patientId = "SPN-0001"
+  const recordHash = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+
+  const handleCopyId = () => {
+    navigator.clipboard.writeText(patientId)
+    setCopiedId(true)
+    setTimeout(() => setCopiedId(false), 2000)
+  }
+
+  const handleCopyHash = () => {
+    navigator.clipboard.writeText(recordHash)
+    setCopiedHash(true)
+    setTimeout(() => setCopiedHash(false), 2000)
+  }
+
   return (
     <div className="flex min-h-screen bg-background">
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r border-border bg-sidebar">
+      <aside
+        className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-border bg-sidebar transition-transform duration-300 lg:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
         {/* Logo */}
-        <div className="flex items-center gap-2 border-b border-border px-6 py-5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <span className="text-sm font-bold text-primary-foreground">S</span>
+        <div className="flex items-center gap-2 border-b border-border px-4 sm:px-6 py-5">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 relative flex-shrink-0">
+            <Image
+              src="/icon.png"
+              alt="The Spine Logo"
+              fill
+              className="object-contain"
+              priority
+            />
           </div>
-          <div>
-            <span className="font-bold text-foreground">The Spine</span>
+          <div className="min-w-0">
+            <span className="font-bold text-foreground text-sm sm:text-base">The Spine</span>
             <p className="text-xs text-muted-foreground">we care about you</p>
           </div>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="ml-auto lg:hidden p-2 hover:bg-muted rounded-lg"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
         {/* User Profile */}
-        <div className="border-b border-border px-6 py-4">
+        <div className="border-b border-border px-4 sm:px-6 py-4">
           <div className="glow-card flex items-center gap-3 rounded-xl p-3">
-            <Avatar className="h-10 w-10 border-2 border-primary/50">
+            <Avatar className="h-10 w-10 border-2 border-primary/50 flex-shrink-0">
               <AvatarImage src="/ethiopian-woman-portrait.jpg" />
               <AvatarFallback>SL</AvatarFallback>
             </Avatar>
-            <div>
-              <p className="font-semibold text-foreground">Sierra Lisbon</p>
-              <p className="text-xs text-muted-foreground">s.ferguson@gmail.com</p>
+            <div className="min-w-0">
+              <p className="font-semibold text-foreground text-sm truncate">Sierra Lisbon</p>
+              <p className="text-xs text-muted-foreground truncate">s.ferguson@gmail.com</p>
             </div>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 py-4">
+        <nav className="flex-1 px-4 py-4 overflow-y-auto">
           <ul className="space-y-1">
             {sidebarNavItems.map((item) => (
               <li key={item.label}>
                 <Link
                   href={item.href}
+                  onClick={() => setSidebarOpen(false)}
                   className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
                     item.active
                       ? "glow-card bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                   }`}
                 >
-                  <item.icon className="h-5 w-5" />
+                  <item.icon className="h-5 w-5 flex-shrink-0" />
                   {item.label}
                 </Link>
               </li>
@@ -107,9 +161,10 @@ export default function PatientDashboard() {
               <li key={item.label}>
                 <Link
                   href={item.href}
+                  onClick={() => setSidebarOpen(false)}
                   className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:bg-secondary hover:text-foreground"
                 >
-                  <item.icon className="h-5 w-5" />
+                  <item.icon className="h-5 w-5 flex-shrink-0" />
                   {item.label}
                 </Link>
               </li>
@@ -119,14 +174,27 @@ export default function PatientDashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="ml-64 flex-1">
+      <main className="flex-1 lg:ml-64">
         {/* Top Header */}
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/80 px-8 py-4 backdrop-blur-md">
-          <div className="relative w-80">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Global search" className="h-10 bg-secondary/50 pl-10 focus:bg-card" />
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/80 px-4 sm:px-6 lg:px-8 py-4 backdrop-blur-md">
+          <div className="flex items-center gap-3 flex-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            <div className="relative w-full max-w-md">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search records..."
+                className="h-10 bg-secondary/50 pl-10 focus:bg-card text-sm sm:text-base"
+              />
+            </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-10 w-10 rounded-full">
               {mounted && theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
@@ -138,191 +206,244 @@ export default function PatientDashboard() {
         </header>
 
         {/* Dashboard Content */}
-        <div className="flex gap-6 p-8">
+        <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 p-4 sm:p-6 lg:p-8">
           {/* Left Column */}
-          <div className="flex-1 space-y-6">
+          <div className="flex-1 space-y-4 sm:space-y-6">
             {/* Greeting */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-foreground">
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
                   Hello, <span className="glow-text text-primary">Kate!</span>
                 </h1>
-                <p className="mt-1 text-muted-foreground">Have are you feeling today?</p>
+                <p className="mt-1 text-sm sm:text-base text-muted-foreground">How are you feeling today?</p>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" size="icon" className="glow-card h-12 w-12 rounded-xl bg-transparent">
-                  <MessageSquare className="h-5 w-5 text-primary" />
+                <Button variant="outline" size="icon" className="glow-card h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-transparent">
+                  <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 </Button>
               </div>
             </div>
 
             {/* Doctor and Data Cards */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Your Doctor Card */}
-              <div className="glow-card rounded-2xl p-5">
+              <div className="glow-card rounded-2xl p-4 sm:p-5">
                 <div className="mb-4 flex items-center justify-between">
-                  <h3 className="font-semibold text-foreground">Your doctor</h3>
+                  <h3 className="font-semibold text-foreground text-sm sm:text-base">Your doctor</h3>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-12 w-12 border-2 border-primary/30">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <Avatar className="h-10 w-10 sm:h-12 sm:w-12 border-2 border-primary/30 flex-shrink-0">
                       <AvatarImage src="/ethiopian-male-doctor.jpg" />
                       <AvatarFallback>NF</AvatarFallback>
                     </Avatar>
-                    <div>
-                      <p className="font-semibold text-foreground">Nik Friman</p>
-                      <p className="text-sm text-primary">Therapist</p>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-foreground text-sm sm:text-base truncate">Nik Friman</p>
+                      <p className="text-xs sm:text-sm text-primary truncate">Therapist</p>
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg bg-secondary">
-                      <MessageSquare className="h-4 w-4" />
+                  <div className="flex gap-2 flex-shrink-0">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-secondary">
+                      <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
                     </Button>
                   </div>
                 </div>
               </div>
 
               {/* Your Data Card */}
-              <div className="glow-card rounded-2xl p-5">
+              <div className="glow-card rounded-2xl p-4 sm:p-5">
                 <div className="mb-4 flex items-center justify-between">
-                  <h3 className="font-semibold text-foreground">Your data</h3>
-                  <button className="text-sm text-primary hover:underline">Change</button>
+                  <h3 className="font-semibold text-foreground text-sm sm:text-base">Your data</h3>
+                  <button className="text-xs sm:text-sm text-primary hover:underline">Change</button>
                 </div>
-                <div className="grid grid-cols-3 gap-4 text-center">
+                <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center">
                   <div>
                     <p className="text-xs text-muted-foreground">Weight</p>
-                    <p className="text-xl font-bold text-foreground">58 kg</p>
+                    <p className="text-lg sm:text-xl font-bold text-foreground">58 kg</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Height</p>
-                    <p className="text-xl font-bold text-foreground">1.72 m</p>
+                    <p className="text-lg sm:text-xl font-bold text-foreground">1.72 m</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Blood</p>
-                    <p className="text-xl font-bold text-foreground">A+</p>
+                    <p className="text-lg sm:text-xl font-bold text-foreground">A+</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Services Section */}
-            <div className="flex gap-6">
-              {/* Service Cards */}
-              <div className="flex flex-1 flex-col gap-3">
-                <div className="glow-card flex items-center justify-between rounded-xl p-4 transition-transform hover:scale-[1.02]">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20">
-                      <Heart className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-foreground">Diagnostic</h4>
-                      <p className="text-sm text-muted-foreground">List of diseases</p>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                    <Plus className="h-4 w-4" />
+            {/* Medical History Section */}
+            <div className="glow-card rounded-2xl p-4 sm:p-6">
+              <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <h3 className="text-lg sm:text-xl font-semibold text-foreground flex items-center gap-2">
+                  <History className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
+                  Medical History
+                </h3>
+                <Link href="/dashboard/patient/record">
+                  <Button variant="outline" size="sm" className="gap-2 w-full sm:w-auto">
+                    View All
+                    <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />
                   </Button>
+                </Link>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 sm:gap-4 p-3 rounded-lg bg-muted/30">
+                  <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
+                    <Heart className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-foreground text-sm sm:text-base">Hypertension Diagnosis</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">January 15, 2024</p>
+                  </div>
                 </div>
-
-                <div className="glow-card flex items-center justify-between rounded-xl p-4 transition-transform hover:scale-[1.02]">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/20">
-                      <Pill className="h-6 w-6 text-accent" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-foreground">Drugs</h4>
-                      <p className="text-sm text-muted-foreground">Archive of tests</p>
-                    </div>
+                <div className="flex items-center gap-3 sm:gap-4 p-3 rounded-lg bg-muted/30">
+                  <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center flex-shrink-0">
+                    <Pill className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
                   </div>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                    <Plus className="h-4 w-4" />
-                  </Button>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-foreground text-sm sm:text-base">Prescription: Lisinopril</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">January 15, 2024</p>
+                  </div>
                 </div>
+              </div>
+            </div>
 
-                <div className="glow-card flex items-center justify-between rounded-xl p-4 transition-transform hover:scale-[1.02]">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-chart-3/20">
-                      <FlaskConical className="h-6 w-6 text-chart-3" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-foreground">Tests</h4>
-                      <p className="text-sm text-muted-foreground">Prescribed medicine</p>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                    <Plus className="h-4 w-4" />
+            {/* Past Tests Section */}
+            <div className="glow-card rounded-2xl p-4 sm:p-6">
+              <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <h3 className="text-lg sm:text-xl font-semibold text-foreground flex items-center gap-2">
+                  <FlaskConical className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
+                  Past Tests
+                </h3>
+                <Link href="/dashboard/patient/record">
+                  <Button variant="outline" size="sm" className="gap-2 w-full sm:w-auto">
+                    View All
+                    <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />
                   </Button>
+                </Link>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 sm:gap-4 p-3 rounded-lg bg-muted/30">
+                  <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                    <FlaskConical className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-foreground text-sm sm:text-base">Blood Test - CBC</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">December 10, 2023 • Results: Normal</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 sm:gap-4 p-3 rounded-lg bg-muted/30">
+                  <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                    <FlaskConical className="h-4 w-4 sm:h-5 sm:w-5 text-green-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-foreground text-sm sm:text-base">X-Ray - Chest</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">November 5, 2023 • Results: Clear</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Right Column - Reminder */}
-          <div className="w-80">
-            <div className="glow-card rounded-2xl p-5">
+          {/* Right Column - QR Code & Download */}
+          <div className="w-full lg:w-80 space-y-4 sm:space-y-6">
+            {/* Patient ID & Verification */}
+            <div className="glow-card rounded-2xl p-4 sm:p-6">
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="font-semibold text-foreground">Remind me</h3>
-                <div className="flex gap-2 text-sm">
-                  <span className="text-muted-foreground">Show:</span>
-                  <button
-                    onClick={() => setTaskFilter("week")}
-                    className={`${taskFilter === "week" ? "text-primary" : "text-muted-foreground"}`}
-                  >
-                    This week
-                  </button>
-                  <span className="text-muted-foreground">•</span>
-                  <button
-                    onClick={() => setTaskFilter("month")}
-                    className={`${taskFilter === "month" ? "text-primary" : "text-muted-foreground"}`}
-                  >
-                    Month
-                  </button>
-                </div>
+                <h3 className="font-semibold text-foreground text-sm sm:text-base flex items-center gap-2">
+                  <User className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
+                  Patient ID
+                </h3>
               </div>
-
-              {/* Progress Bar */}
-              <div className="mb-4">
-                <p className="mb-2 text-sm text-muted-foreground">
-                  {completedTasks} task completed out of {tasks.length}
-                </p>
-                <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all"
-                    style={{ width: `${(completedTasks / tasks.length) * 100}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Task List */}
               <div className="space-y-3">
-                {tasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className={`flex items-center justify-between rounded-xl border p-3 transition-all ${
-                      task.completed
-                        ? "border-primary/30 bg-primary/5"
-                        : "border-border bg-card hover:border-primary/20"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`flex h-6 w-6 items-center justify-center rounded-md ${
-                          task.completed ? "bg-primary text-primary-foreground" : "border border-border"
-                        }`}
-                      >
-                        {task.completed && <Check className="h-4 w-4" />}
-                      </div>
-                      <div>
-                        <p className={`text-sm font-medium ${task.completed ? "text-foreground" : "text-foreground"}`}>
-                          {task.title}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{task.date}</p>
-                      </div>
-                    </div>
-                    <button className="text-xs text-primary hover:underline">Change</button>
+                <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <p className="text-xs text-muted-foreground">Your Patient ID</p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleCopyId}
+                      className="h-6 w-6 p-0"
+                    >
+                      {copiedId ? (
+                        <CheckCircle2 className="h-3 w-3 text-green-400" />
+                      ) : (
+                        <Copy className="h-3 w-3" />
+                      )}
+                    </Button>
                   </div>
-                ))}
+                  <code className="text-sm sm:text-base font-mono font-semibold text-foreground break-all">
+                    {patientId}
+                  </code>
+                </div>
+                <div className="p-3 rounded-lg bg-green-500/5 border border-green-500/20">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-3 w-3 text-green-400" />
+                      <p className="text-xs text-muted-foreground">Cardano Record Hash</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleCopyHash}
+                      className="h-6 w-6 p-0"
+                    >
+                      {copiedHash ? (
+                        <CheckCircle2 className="h-3 w-3 text-green-400" />
+                      ) : (
+                        <Copy className="h-3 w-3" />
+                      )}
+                    </Button>
+                  </div>
+                  <code className="text-xs font-mono text-foreground break-all">
+                    {recordHash}
+                  </code>
+                  <p className="text-xs text-green-400 mt-2 flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Verified on Cardano Blockchain
+                  </p>
+                </div>
               </div>
+            </div>
+
+            {/* QR Code Access */}
+            <div className="glow-card rounded-2xl p-4 sm:p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="font-semibold text-foreground text-sm sm:text-base flex items-center gap-2">
+                  <QrCode className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
+                  QR Code Access
+                </h3>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="w-full max-w-[200px] sm:w-48 aspect-square bg-background rounded-lg flex items-center justify-center border-2 border-dashed border-border mb-4">
+                  <QrCode className="w-24 h-24 sm:w-32 sm:h-32 text-muted-foreground" />
+                </div>
+                <p className="text-xs sm:text-sm text-muted-foreground text-center mb-4 px-2">
+                  Contains: Patient ID + Record Hash. Show to healthcare providers for instant access.
+                </p>
+                <Button variant="outline" className="w-full gap-2 text-sm sm:text-base">
+                  <Download className="h-3 w-3 sm:h-4 sm:w-4" />
+                  Download QR Code
+                </Button>
+              </div>
+            </div>
+
+            {/* Download Report */}
+            <div className="glow-card rounded-2xl p-4 sm:p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="font-semibold text-foreground text-sm sm:text-base flex items-center gap-2">
+                  <Download className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
+                  Download Report
+                </h3>
+              </div>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-4">
+                Download your complete medical history as a PDF report.
+              </p>
+              <Button className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white gap-2 text-sm sm:text-base">
+                <Download className="h-3 w-3 sm:h-4 sm:w-4" />
+                Download Full Report
+              </Button>
             </div>
           </div>
         </div>

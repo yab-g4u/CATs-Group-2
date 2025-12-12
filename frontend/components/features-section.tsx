@@ -1,38 +1,23 @@
-import { QrCode, Shield, Zap, Layers, UserCheck, Wifi } from "lucide-react"
+import { QrCode, Shield, FileText } from "lucide-react"
 
 const features = [
   {
     icon: QrCode,
-    title: "Simple QR Code Access",
+    title: "QR Code Identity",
     description:
-      "Doctors instantly access complete patient history with a single QR code scan, eliminating paperwork and delays.",
+      "Every patient gets a unique QR code that serves as their digital medical identity. One scan gives doctors instant access to complete medical history, eliminating the need for paper records or repeated tests.",
   },
   {
     icon: Shield,
-    title: "Secure & Encrypted",
+    title: "Blockchain Security",
     description:
-      "Cardano blockchain ensures data integrity and security while maintaining full patient privacy and compliance.",
+      "Powered by Cardano blockchain, all medical records are securely stored with cryptographic protection. Data is immutable, tamper-proof, and accessible only to authorized healthcare providers, ensuring patient privacy and data integrity.",
   },
   {
-    icon: Zap,
-    title: "Lightning Fast Referrals",
+    icon: FileText,
+    title: "Complete Medical Records",
     description:
-      "Replace handwritten letters with digital referral packets that arrive instantly to receiving hospitals.",
-  },
-  {
-    icon: Layers,
-    title: "Seamless Integration",
-    description: "Works with existing clinic systems and requires minimal training for healthcare workers.",
-  },
-  {
-    icon: UserCheck,
-    title: "Patient Control",
-    description: "Patients maintain full control over their medical data and who can access it.",
-  },
-  {
-    icon: Wifi,
-    title: "Always Available",
-    description: "Medical records accessible even offline, with automatic sync when connectivity returns.",
+      "A comprehensive digital record of every test, diagnosis, treatment, and referral. Patients carry their complete medical history in one place, accessible anywhere, anytime, ensuring continuity of care across all healthcare facilities.",
   },
 ]
 
@@ -42,24 +27,24 @@ export function FeaturesSection() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-            Powerful Features for <span className="text-primary glow-text">Better Care</span>
+            What The Spine <span className="text-primary glow-text">Does</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Built specifically for African healthcare systems, designed with clinicians and patients in mind.
+            Three powerful technologies working together to transform healthcare delivery in Africa.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-8">
           {features.map((feature, index) => (
             <div
               key={index}
-              className="glow-card rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 group"
+              className="glow-card rounded-2xl p-8 transition-all duration-300 hover:-translate-y-2 group"
             >
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/30 to-accent/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <feature.icon className="w-6 h-6 text-primary" />
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/30 to-accent/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <feature.icon className="w-8 h-8 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">{feature.title}</h3>
-              <p className="text-muted-foreground">{feature.description}</p>
+              <h3 className="text-2xl font-semibold text-foreground mb-4">{feature.title}</h3>
+              <p className="text-muted-foreground text-lg leading-relaxed">{feature.description}</p>
             </div>
           ))}
         </div>

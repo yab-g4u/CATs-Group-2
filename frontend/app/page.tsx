@@ -1,9 +1,9 @@
 import { Navbar } from "@/components/navbar"
 import { HeroSection } from "@/components/hero-section"
-import { StatsSection } from "@/components/stats-section"
-import { ChallengesSection } from "@/components/challenges-section"
+import { StorySection } from "@/components/story-section"
+import { VideoSection } from "@/components/video-section"
 import { FeaturesSection } from "@/components/features-section"
-import { WhySection } from "@/components/why-section"
+import { HowItWorksSection } from "@/components/how-it-works-section"
 import Image from "next/image"
 // Using an inline testimonials section here because the component in
 // `components/testimonials-section.tsx` points image srcs at
@@ -26,33 +26,32 @@ export default function Home() {
       <div className="relative z-10">
         <Navbar />
         <HeroSection />
-        <StatsSection />
-        <ChallengesSection />
+        <StorySection />
+        <VideoSection />
         <FeaturesSection />
-        <WhySection />
         {/* Inline testimonials (uses correct public paths) */}
         {(() => {
           const testimonials = [
             {
               quote:
-                "Still early, but the referral flow already feels faster. If they land the remaining features, this could remove a lot of friction for our team.",
+                "Before The Spine, I spent 15-20 minutes per patient just trying to piece together their medical history from scattered paper records. Now, one QR scan gives me everything instantly. It's transformed how I practice medicine—I can focus on diagnosis and treatment instead of paperwork.",
               name: "Dr. Tegegne Abiyot",
               role: "Chief Doctor, Tikur Anbessa Hospital",
               image: encodeURI("/Dr.tegegn abiyot.png"),
             },
             {
               quote:
-                "We're piloting it with a few sites. The promise of consistent patient histories across facilities is exactly what we need—looking forward to the full rollout.",
+                "The biggest challenge in our health posts is losing patient records when they move between facilities. The Spine's blockchain storage means we never lose critical information. I've seen it prevent duplicate tests and help us make better treatment decisions with complete patient histories.",
               name: "Dr. Saron Leulkal",
               role: "Health Post Coordinator, Addis Ababa",
               image: encodeURI("/Dr.saron leulkal.png"),
             },
             {
               quote:
-                "Even in beta, seeing my records in one place is reassuring. If they keep this pace, it'll be a game changer for patients like me.",
+                "As a pediatrician, continuity of care is crucial. When a child comes in with incomplete records, I'm forced to make decisions without full context. The Spine ensures I always have access to vaccination history, previous diagnoses, and medication records—this directly improves patient outcomes.",
               name: "Dr. Rita Tilaye",
-              role: "Patient, Digital Healthcare Advocate",
-              image: encodeURI("/Dr.Rrita tilaye.png"),
+              role: "Pediatrician, Addis Ababa Health Center",
+              image: encodeURI("/Dr.Rita tilaye.png"),
             },
           ]
 
@@ -61,28 +60,28 @@ export default function Home() {
               <div className="max-w-7xl mx-auto">
                 <div className="text-center mb-16">
                   <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-                    Early words, <span className="text-primary glow-text">strong promise</span>
+                    What Doctors <span className="text-primary glow-text">Say</span>
                   </h2>
                   <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                    A project in motion—here&apos;s what early users notice as The Spine takes shape.
+                    Early feedback from healthcare providers using The Spine.
                   </p>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {testimonials.map((testimonial, index) => (
                     <div key={index} className="glow-card rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1">
-                      <p className="text-foreground mb-6 italic">&ldquo;{testimonial.quote}&rdquo;</p>
+                      <p className="text-foreground mb-6 italic text-sm sm:text-base leading-relaxed">&ldquo;{testimonial.quote}&rdquo;</p>
                       <div className="flex items-center gap-4">
                         <Image
                           src={testimonial.image || "/placeholder.svg"}
                           alt={testimonial.name}
                           width={48}
                           height={48}
-                          className="rounded-full"
+                          className="rounded-full flex-shrink-0"
                         />
-                        <div>
-                          <p className="font-semibold text-foreground">{testimonial.name}</p>
-                          <p className="text-muted-foreground text-sm">{testimonial.role}</p>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-foreground text-sm sm:text-base truncate">{testimonial.name}</p>
+                          <p className="text-muted-foreground text-xs sm:text-sm truncate">{testimonial.role}</p>
                         </div>
                       </div>
                     </div>
@@ -92,6 +91,7 @@ export default function Home() {
             </section>
           )
         })()}
+        <HowItWorksSection />
         <CTASection />
         <Footer />
       </div>
