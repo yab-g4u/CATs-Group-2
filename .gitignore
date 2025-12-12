@@ -1,95 +1,49 @@
-# Node / JavaScript
+# Sensitive wallet files - NEVER commit these!
+*.skey
+*.seed
+recovery-phrase.txt
+wallet-seed.txt
+mnemonic.txt
+
+# Environment files
+.env
+*.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Node.js
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-/.pnp
-.pnp.js
 
-# Next.js build outputs
-/.next/
-out/
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build directories
 build/
-
-# Vercel
-.vercel/
+dist/
 
 # Logs
 *.log
 
-# Editor and OS
-.DS_Store
-Thumbs.db
-desktop.ini
-ehthumbs.db
-.idea/
-.vscode/
-*.sublime-workspace
-
-# Environment
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Mac
-.Spotlight-V100
-.Trashes
-
-# Python artifacts (in case any tools use Python)
-__pycache__/
-*.py[cod]
-*.pyo
-venv/
-env/
-
-# Cardano / Smart contract build artifacts (common patterns)
-dist/
-build-*/
-*.cbor
-# Do not ignore all JSON globally; allow tracking config/package files
-
-# Aiken / smart-contracts
-smart-contracts/.cache/
-
-# Tests
-/coverage/
-
-# Misc
-*.pem
-*.key
-*.crt
-
-# Ensure frontend folder gitkeeps aren't ignored if present intentionally
-!frontend/**/.gitkeep
-
-# -- Additional project-wide ignores for nested folders and smart-contracts --
-
-# ignore node_modules anywhere (frontend/backend nested)
-**/node_modules/
-
-# Next.js build outputs in nested folders (e.g., frontend/.next)
-**/.next/
-**/out/
-
-# Vercel config and caches
-**/.vercel/
-
-# Coverage reports in subfolders
-**/coverage/
-
-# Smart-contracts (Aiken) build/cache/artifacts
-smart-contracts/.cache/
-smart-contracts/dist/
-smart-contracts/build/
-smart-contracts/artifacts/
-
-# Allow example env to be tracked but keep the real env files out
-!.env.example
-
-# Keep README/gitkeep that may be used to hold empty folders
-!**/.gitkeep
-!**/README.md
-
+# Temporary files
+*.tmp
+*.temp

@@ -1,0 +1,24 @@
+{
+  "name": "aiken",
+  "version": "1.0.0",
+  "description": "This directory contains Aiken smart contracts for the Cardano referral system.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@blockfrost/blockfrost-js": "^6.1.0",
+    "@emurgo/cardano-serialization-lib-nodejs": "^15.0.3",
+    "dotenv": "^17.2.3",
+    "ipfs-http-client": "^60.0.1",
+    "lucid-cardano": "^0.10.11"
+  }
+}

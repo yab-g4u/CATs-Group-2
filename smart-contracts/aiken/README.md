@@ -1,38 +1,44 @@
-# Aiken Smart Contracts - Referral System
+# DINA - Aiken Smart Contracts for Referral Integrity System
 
-This directory contains Aiken smart contracts for the Cardano referral system.
+This directory contains Aiken smart contracts for the **DINA (Digital Referral Integrity System)** on Cardano, ensuring medical referrals are authentic and tamper-proof.
 
 ## Project Structure
 
 ```
 aiken/
-├── aiken.toml          # Project configuration
-├── validators/         # Smart contract validators
-│   ├── hello_world.ak  # Basic hello world example
-│   └── referral.ak     # Referral contract validator
-└── tests/              # Test files
-    ├── hello_world_test.ak
-    └── referral_test.ak
+├── aiken.toml              # Project configuration
+├── plutus.json             # Compiled Plutus scripts
+├── validators/             # Smart contract validators
+│   ├── anchor_validator.ak # Core DINA validator for referral proofs
+│   ├── carepoints_policy.ak # Minting policy for CarePoints rewards
+│   ├── referral.ak         # Placeholder/advanced referral logic
+│   ├── hello_world.ak      # Basic example (not used in DINA)
+│   └── hash.py             # Hash utility (Python)
+├── tests/                  # Test files
+│   ├── hello_world_test.ak
+│   └── referral_test.ak
+├── scripts/                # Off-chain scripts and demo
+│   ├── demo.py             # Mock CLI for referrals
+│   ├── index.html          # Browser demo with Lucid
+│   └── verify.py           # Mock verification
+├── data/                   # Mock data stores
+├── env/                    # Environment configs
+└── build/                  # Compiled outputs
 ```
 
 ## Prerequisites
 
-1. **Install Aiken**: Follow instructions at https://aiken-lang.org/
+1. **Install Aiken**: https://aiken-lang.org/
+
    ```powershell
-   # On Windows (using cargo)
    cargo install aiken
-   
-   # Or download from releases
-   # https://github.com/aiken-lang/aiken/releases
    ```
 
-2. **Install Cardano CLI** (for testnet interaction):
-   - Download from: https://github.com/IntersectMBO/cardano-node/releases
-   - Or use Nix: `nix-shell -p cardano-cli`
+2. **Install Cardano CLI** (optional, for advanced deployment):
 
-3. **Set up Cardano Testnet**:
-   - Use pre-production testnet or preview testnet
-   - Get testnet ADA from faucet: https://docs.cardano.org/cardano-testnet/tools/faucet
+   - Download from: https://github.com/IntersectMBO/cardano-node/releases
+
+3. **Set up Testnet**: Use Preprod testnet. Get ADA from faucet: https://docs.cardano.org/cardano-testnet/tools/faucet
 
 ## Quick Start
 
@@ -56,38 +62,49 @@ aiken check
 aiken test
 ```
 
-### 4. Compile to UPLC
-
-```powershell
-# Build and get the compiled script
-aiken build
-
-# The compiled scripts will be in the build directory
-```
-
 ## Contracts Overview
 
-### Hello World Validator
+### Anchor Validator (DINA Core)
 
-A simple validator that demonstrates basic Aiken syntax:
-- Requires redeemer to be "Hello, World!"
-- Requires datum to match "Hello, World!"
+**File**: `validators/anchor_validator.ak`
 
-### Referral Validator
+Enforces DINA referral integrity:
 
-The main referral smart contract with the following features:
+- **Datum**: `issuer_id`, `patient_id`, `record_hash` (referral hash)
+- **Validation**:
+  - Issuer signature required
+  - Referral hash present and valid
+  - Timestamp ≤ transaction time
+- **Purpose**: Stores referral proofs on-chain immutably, without sensitive data.
 
-**Datum Structure:**
-- `referral_hash`: SHA-256 hash of the referral packet (ByteArray)
-- `issuer_id`: Identifier of the issuer (ByteArray)
-- `issued_at`: POSIX timestamp when issued (Int)
+### CarePoints Policy (Added Feature)
 
-**Validation Rules:**
-1. ✅ Issuer must sign the transaction (`issuer_id` in `extra_signatories`)
-2. ✅ Referral hash must be set (non-empty)
-3. ✅ Timestamp must be valid (not too old, not in future)
+**File**: `validators/carepoints_policy.ak`
 
-## Deployment Guide
+Minting policy for CarePoints rewards:
+
+- Sig-based policy (wallet owner can mint)
+- Used for rewarding doctors per referral/work.
+
+### Referral Validator (Placeholder)
+
+**File**: `validators/referral.ak`
+
+Advanced referral logic (not integrated in demo).
+
+## Demo Workflow (No Full Deployment Needed)
+
+Instead of manual deployment, use the browser demo for testing:
+
+1. **Run Demo**: Open `scripts/index.html` in browser with Eternl wallet.
+2. **Connect Wallet**: Preprod network.
+3. **Anchor Referral**: Stores mock referral proof on-chain, earns CP, generates QR.
+4. **Verify**: Enter tx hash to retrieve proof from blockchain.
+5. **Check Explorer**: View tx on https://preprod.cardanoscan.io/
+
+This proves DINA concept with real testnet transactions.
+
+## Deployment Guide (For Production)
 
 ### Step 1: Compile Contract
 
@@ -95,99 +112,65 @@ The main referral smart contract with the following features:
 aiken build
 ```
 
-This generates UPLC (Untyped Plutus Core) bytecode.
-
-### Step 2: Get Script Address
+### Step 2: Export Blueprint
 
 ```powershell
-# Export the validator
-aiken blueprint convert -m validators/referral > referral.json
-
-# Use cardano-cli to get address (after converting to CBOR)
-cardano-cli address build \
-  --payment-script-file referral.cbor \
-  --testnet-magic 1 \
-  --out-file referral.addr
+aiken blueprint convert -m validators/anchor_validator > anchor_blueprint.json
 ```
 
-### Step 3: Lock Funds
+### Step 3: Get Script Address (Using Lucid or cardano-cli)
 
-Create a transaction that locks ADA to the script address with the referral datum.
+- Use Lucid in code: `lucid.utils.validatorToAddress(validator)`
+- Or cardano-cli with CBOR.
 
-### Step 4: Verify on Explorer
+### Step 4: Submit Transactions
 
-Check your transaction on:
-- Preprod: https://preprod.cardanoscan.io/
-- Preview: https://preview.cardanoscan.io/
+- Use Lucid (as in demo) for easy submission.
+- Or cardano-cli for advanced cases.
 
 ## Backend Integration
 
-See `backend_integration_example.py` for a complete Python example.
+The backend (Django) should:
 
-The backend should:
+1. **Generate Referral**:
 
-1. **Generate Referral Packet**:
    ```python
-   referral_packet = {
-       "patient_id": "...",
-       "doctor_id": "...",
-       "facility": "...",
-       "timestamp": "..."
-   }
+   referral = {"patient_id": "...", "doctor_id": "...", "details": "..."}
    ```
 
-2. **Hash Packet** (SHA-256):
+2. **Compute Hash**:
+
    ```python
    import hashlib
-   packet_json = json.dumps(referral_packet, sort_keys=True)
-   referral_hash = hashlib.sha256(packet_json.encode()).digest()
+   hash_obj = hashlib.sha256(json.dumps(referral, sort_keys=True).encode())
+   referral_hash = hash_obj.digest()
    ```
 
-3. **Build Cardano Transaction**:
-   - Create datum with `referral_hash`, `issuer_id`, `issued_at`
-   - Lock ADA to script address
-   - Sign with issuer's private key
+3. **Submit to Cardano**:
 
-4. **Submit Transaction**:
-   - Submit to Cardano testnet
-   - Return transaction ID
+   - Use Lucid or Blockfrost API to create tx with metadata: `{674: {referral_hash, issuer_id, timestamp}}`
+   - Return tx hash.
 
-5. **Expose API**:
-   ```
-   POST /refer
-   → Returns: { "txHash": "...", "referralHash": "...", "status": "pending" }
-   ```
-
-**Note**: For production, use proper Cardano libraries like `pycardano` or interact with `cardano-cli` via subprocess.
+4. **API Endpoints**:
+   - `POST /refer`: Submit referral, return tx hash.
+   - `GET /verify/{tx_hash}`: Verify via Blockfrost.
 
 ## Development Workflow
 
-1. **Edit contracts** in `validators/`
-2. **Write tests** in `tests/`
-3. **Check syntax**: `aiken check`
-4. **Run tests**: `aiken test`
-5. **Build**: `aiken build`
-6. **Deploy**: Follow deployment guide above
+1. Edit validators in `validators/`
+2. Write tests in `tests/`
+3. `aiken check` → `aiken test` → `aiken build`
+4. Test with demo script
+5. Deploy for production
 
 ## Resources
 
-- [Aiken Documentation](https://aiken-lang.org/)
-- [Aiken Standard Library](https://aiken-lang.org/stdlib/)
-- [Cardano Testnet Guide](https://docs.cardano.org/cardano-testnet/)
-- [Plutus Documentation](https://plutus.readthedocs.io/)
+- [Aiken Docs](https://aiken-lang.org/)
+- [Cardano Testnet](https://docs.cardano.org/cardano-testnet/)
+- [Lucid Docs](https://lucid.spacebudz.io/) (for off-chain)
 
 ## Troubleshooting
 
-### Aiken not found
-- Ensure Aiken is in your PATH
-- Try: `cargo install aiken` or download from releases
-
-### Build errors
-- Check `aiken.toml` configuration
-- Ensure dependencies are correct
-- Run `aiken check` for detailed errors
-
-### Test failures
-- Review test context setup
-- Check that test data matches validator expectations
-
+- **Build Errors**: Check `aiken.toml`, run `aiken check`
+- **Demo Issues**: Ensure Eternl wallet, Preprod network
+- **Tx Failures**: Check Blockfrost API key in `env/blockfrost.env`

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Lucid + Eternl Test</title>
+  </head>
+  <body>
+    <h2>Connect Eternl Wallet</h2>
+
+    <button id="connectBtn">Connect Wallet</button>
+    <button id="anchorBtn" disabled>Anchor Record & Earn 10 CP</button>
+    <button id="convertBtn" disabled>Convert CP → ADA</button>
+
+    <pre id="status"></pre>
+
+    <script type="module">
+      import {
+        Lucid,
+        Blockfrost,
+      } from "https://unpkg.com/lucid-cardano@0.10.7/web/mod.js";
+
+      let lucid;
+
+      // --------------------------
+      // 1. Initialize Lucid (Preprod)
+      // --------------------------
+      async function initLucid() {
+        console.log("Initializing Lucid...");
+        try {
+          lucid = await Lucid.new(
+            new Blockfrost(
+              "https://cardano-preprod.blockfrost.io/api/v0",
+              "preprodBLXYKdWSTsopaLm2VNtPFCxzQCEGntEk" // ✅ your project ID
+            ),
+            "Preprod"
+          );
+          console.log("Lucid initialized on PREPROD");
+        } catch (err) {
+          console.error("Failed to initialize Lucid:", err);
+        }
+      }
+
+      // --------------------------
+      // 2. Connect Eternl browser wallet
+      // --------------------------
+      async function connectWallet() {
+        if (!window.cardano || !window.cardano.eternl) {
+          alert("Eternl wallet NOT found in browser!");
+          return;
+        }
+
+        try {
+          const api = await window.cardano.eternl.enable();
+          await lucid.selectWallet(api);
+
+          const address = await lucid.wallet.address();
+          console.log("Connected Wallet:", address);
+
+          document.getElementById("status").innerText =
+            "Connected Wallet:\n" + address;
+
+          // enable buttons
+          document.getElementById("anchorBtn").disabled = false;
+          document.getElementById("convertBtn").disabled = false;
+        } catch (err) {
+          alert("Failed to connect wallet: " + err.message);
+        }
+      }
+
+      // --------------------------
+      // 3. Anchor Medical Record & Earn CarePoints
+      // --------------------------
+      async function anchorRecord() {
+        const addr = await lucid.wallet.address();
+
+        const policy = lucid.utils.nativeScriptFromJson({
+          type: "sig",
+          keyHash: lucid.utils.getAddressDetails(addr).paymentCredential.hash,
+        });
+
+        const policyId = lucid.utils.mintingPolicyToId(policy);
+        const assetName = "435025"; // "CP" hex
+        const unit = policyId + assetName;
+
+        const tx = await lucid
+          .newTx()
+          .mintAssets({ [unit]: 10n }) // earn 10 CP for anchoring
+          .attachMintingPolicy(policy)
+          .attachMetadata(
+            674,
+            "QmMockIPFSHashForRecord P12345 sha256hashofrecord"
+          )
+          .payToAddress(addr, { lovelace: 500_000n }) // small ADA to anchor
+          .complete();
+
+        const signedTx = await tx.sign().complete();
+        const txHash = await signedTx.submit();
+
+        alert("Anchored record & earned 10 CP!\nTxHash:\n" + txHash);
+      }
+
+      // --------------------------
+      // 5. Mock ADA Conversion
+      // --------------------------
+      function convertCPToADA(amount) {
+        // Mock: in real app, this would be a DEX or liquidity pool tx
+        alert(
+          `Mock conversion: ${amount} CP → ${
+            amount * 0.1
+          } ADA\n(In real system, this would submit a swap tx)`
+        );
+      }
+
+      // --------------------------
+      // 4. Button events
+      // --------------------------
+      document
+        .getElementById("connectBtn")
+        .addEventListener("click", async () => {
+          await initLucid();
+          await connectWallet();
+        });
+
+      document
+        .getElementById("anchorBtn")
+        .addEventListener("click", async () => {
+          await anchorRecord();
+        });
+
+      document.getElementById("convertBtn").addEventListener("click", () => {
+        convertCPToADA(10);
+      });
+    </script>
+  </body>
+</html>

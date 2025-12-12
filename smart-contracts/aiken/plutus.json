@@ -12,29 +12,48 @@
   },
   "validators": [
     {
-      "title": "hello_world.hello_world.spend",
+      "title": "anchor_validator.anchor_validator.spend",
       "datum": {
         "title": "datum_opt",
         "schema": {
-          "$ref": "#/definitions/hello_world~1Datum"
+          "$ref": "#/definitions/anchor_validator~1Datum"
         }
       },
       "redeemer": {
-        "title": "redeemer",
+        "title": "_redeemer",
         "schema": {
-          "$ref": "#/definitions/hello_world~1Redeemer"
+          "$ref": "#/definitions/anchor_validator~1Redeemer"
         }
       },
-      "compiledCode": "58da01010029800aba2aba1aab9faab9eaab9dab9a48888896600264653001300700198039804000cc01c0092225980099b8748008c01cdd500144c8cc896600266e1d2000300a375400d13232598009808001456600266e1d2000300c375400715980099b8f375c601e601a6ea80212210d48656c6c6f2c20576f726c642100899b8f375c601e601a6ea8c03cc034dd5001a4410d48656c6c6f2c20576f726c6421008a50402d16402d1640386eb8c038004c02cdd500345900918058009805980600098041baa0028b200c180380098019baa0078a4d1365640041",
-      "hash": "ae0848b180c1ce22f01f815ba1163f102bbbdd6e68f11c51c14c6e0f"
+      "compiledCode": "59011a01010029800aba2aba1aab9faab9eaab9dab9a48888896600264646644b30013370e900118031baa0018994c004c028006601460160035980099b8748000c01cdd5001c56600260106ea800e2934590094590062444b30013370e900018051baa0028992cc004c8cc88cc008008004896600200314a115980099b8f375c602200200714a3133002002301200140348080dd618079808180818081808180818081808180818069baa300f00a375c601c60186ea80062b3001980099b8f375c601c601e601e60186ea8005220100a50a51402913371290001bad300e300f300f300f300c375400314a08052294100a180698059baa0028b201218039baa0018b200a30070013007300800130070013003375400f149a26cac80081",
+      "hash": "fce9a95619c8b7a555b29ab7e44ddcb31ca8c4c825ea38d5c8a5c8a2"
     },
     {
-      "title": "hello_world.hello_world.else",
+      "title": "anchor_validator.anchor_validator.else",
       "redeemer": {
         "schema": {}
       },
-      "compiledCode": "58da01010029800aba2aba1aab9faab9eaab9dab9a48888896600264653001300700198039804000cc01c0092225980099b8748008c01cdd500144c8cc896600266e1d2000300a375400d13232598009808001456600266e1d2000300c375400715980099b8f375c601e601a6ea80212210d48656c6c6f2c20576f726c642100899b8f375c601e601a6ea8c03cc034dd5001a4410d48656c6c6f2c20576f726c6421008a50402d16402d1640386eb8c038004c02cdd500345900918058009805980600098041baa0028b200c180380098019baa0078a4d1365640041",
-      "hash": "ae0848b180c1ce22f01f815ba1163f102bbbdd6e68f11c51c14c6e0f"
+      "compiledCode": "59011a01010029800aba2aba1aab9faab9eaab9dab9a48888896600264646644b30013370e900118031baa0018994c004c028006601460160035980099b8748000c01cdd5001c56600260106ea800e2934590094590062444b30013370e900018051baa0028992cc004c8cc88cc008008004896600200314a115980099b8f375c602200200714a3133002002301200140348080dd618079808180818081808180818081808180818069baa300f00a375c601c60186ea80062b3001980099b8f375c601c601e601e60186ea8005220100a50a51402913371290001bad300e300f300f300f300c375400314a08052294100a180698059baa0028b201218039baa0018b200a30070013007300800130070013003375400f149a26cac80081",
+      "hash": "fce9a95619c8b7a555b29ab7e44ddcb31ca8c4c825ea38d5c8a5c8a2"
+    },
+    {
+      "title": "carepoints_policy.carepoints_policy.mint",
+      "redeemer": {
+        "title": "redeemer",
+        "schema": {
+          "$ref": "#/definitions/carepoints_policy~1Mint_Cpoint_Redeemer"
+        }
+      },
+      "compiledCode": "59012c01010029800aba2aba1aab9faab9eaab9dab9a48888896600264646644b30013370e900018031baa0018992cc004cdc3a4000600e6ea800e26464b3001300d0028992cc004c8cc004004dd618071807980798079807980798079807980798061baa300e0092259800800c528456600266e3cdd71807800a4411c08ee30a2e0e28b3eaf109642374971c5aa4675f5a0ff71dc8d5988ae008a518998010011808000a016403915980099b88480000062b3001337129001000c4cdc4800a4181341914a0804a2b3001337100029000456600266e240052001899b89482fe6830006294100945282012402514a08048dd6980618051baa0058b2016375a601600260106ea800e2c8030dd7180498039baa0018b200a30070013007300800130070013003375400f149a26cac8009",
+      "hash": "8e768f2d97bc947db13970473c04c285c18385889c70ae52516c3261"
+    },
+    {
+      "title": "carepoints_policy.carepoints_policy.else",
+      "redeemer": {
+        "schema": {}
+      },
+      "compiledCode": "59012c01010029800aba2aba1aab9faab9eaab9dab9a48888896600264646644b30013370e900018031baa0018992cc004cdc3a4000600e6ea800e26464b3001300d0028992cc004c8cc004004dd618071807980798079807980798079807980798061baa300e0092259800800c528456600266e3cdd71807800a4411c08ee30a2e0e28b3eaf109642374971c5aa4675f5a0ff71dc8d5988ae008a518998010011808000a016403915980099b88480000062b3001337129001000c4cdc4800a4181341914a0804a2b3001337100029000456600266e240052001899b89482fe6830006294100945282012402514a08048dd6980618051baa0058b2016375a601600260106ea800e2c8030dd7180498039baa0018b200a30070013007300800130070013003375400f149a26cac8009",
+      "hash": "8e768f2d97bc947db13970473c04c285c18385889c70ae52516c3261"
     },
     {
       "title": "referral.referral.spend",
@@ -69,7 +88,7 @@
     "Int": {
       "dataType": "integer"
     },
-    "hello_world/Datum": {
+    "anchor_validator/Datum": {
       "title": "Datum",
       "anyOf": [
         {
@@ -78,24 +97,46 @@
           "index": 0,
           "fields": [
             {
-              "title": "message",
+              "title": "issuer_id",
               "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "patient_id",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "record_hash",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "issued_at",
+              "$ref": "#/definitions/Int"
             }
           ]
         }
       ]
     },
-    "hello_world/Redeemer": {
+    "anchor_validator/Redeemer": {
       "title": "Redeemer",
       "anyOf": [
         {
-          "title": "Redeemer",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": []
+        }
+      ]
+    },
+    "carepoints_policy/Mint_Cpoint_Redeemer": {
+      "title": "Mint_Cpoint_Redeemer",
+      "anyOf": [
+        {
+          "title": "Mint_Cpoint_Redeemer",
           "dataType": "constructor",
           "index": 0,
           "fields": [
             {
-              "title": "message",
-              "$ref": "#/definitions/ByteArray"
+              "title": "quantity",
+              "$ref": "#/definitions/Int"
             }
           ]
         }
