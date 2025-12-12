@@ -30,6 +30,12 @@ class Referral(models.Model):
     )
     cardano_hash = models.CharField(max_length=128, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    packet_generated = models.BooleanField(default=False)
+    packet_file = models.FileField(upload_to='referral_packets/', null=True, blank=True)
+    notes = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"Referral {self.id} from {self.from_doctor} to {self.to_hospital}"
 
 
 class ClinicianThread(models.Model):
