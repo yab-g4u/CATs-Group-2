@@ -47,3 +47,15 @@ dist/
 # Temporary files
 *.tmp
 *.temp
+
+.next/
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+**/migrations/** 
+**/**/migrations/
+!**/migrations
+!**/migrations/__init__.py
