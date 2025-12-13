@@ -22,8 +22,8 @@ export default function PatientAccessPage() {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000))
     
-    // Navigate to patient dashboard with ID
-    router.push(`/dashboard/patient?id=${encodeURIComponent(patientId.trim())}`)
+    // Navigate to patient record page with ID
+    router.push(`/dashboard/patient/${encodeURIComponent(patientId.trim())}`)
   }
 
   return (

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import {
   LayoutDashboard,
@@ -26,6 +26,9 @@ import {
   FlaskConical,
   Stethoscope,
   UserPlus,
+  Wallet,
+  TrendingUp,
+  Coins,
 } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
@@ -39,8 +42,9 @@ const sidebarNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/doctor", active: true },
   { icon: Users, label: "My Patients", href: "/dashboard/doctor/patients" },
   { icon: UserPlus, label: "Create Patient", href: "/dashboard/doctor/create-patient" },
+  { icon: FileText, label: "Create Record", href: "/dashboard/doctor/create-record" },
   { icon: QrCode, label: "Generate QR", href: "/dashboard/doctor/generate-qr" },
-  { icon: FileText, label: "Records", href: "/dashboard/doctor/records" },
+  { icon: Wallet, label: "CarePoints Wallet", href: "/dashboard/doctor/wallet" },
   { icon: User, label: "Profile", href: "/dashboard/doctor/account" },
 ]
 
@@ -91,6 +95,34 @@ export default function DoctorDashboard() {
   const [activeModal, setActiveModal] = useState<string | null>(null)
   const [selectedPatient, setSelectedPatient] = useState(recentPatients[0])
   const [isScanning, setIsScanning] = useState(false)
+  const [streakData, setStreakData] = useState({ currentStreak: 0, totalUploads: 0 })
+  const [carePoints, setCarePoints] = useState(0)
+
+  useEffect(() => {
+    loadStreakData()
+  }, [])
+
+  const loadStreakData = async () => {
+    try {
+      const doctorId = "doctor_1" // In production, get from auth context
+      const response = await fetch(`/api/doctor/streak?doctorId=${doctorId}`)
+      const data = await response.json()
+      if (data.success) {
+        setStreakData({
+          currentStreak: data.currentStreak || 0,
+          totalUploads: data.totalUploads || 0,
+        })
+        // Calculate CarePoints (10 base + 2 per streak day)
+        const storedData = localStorage.getItem(`carepoints_${doctorId}`)
+        if (storedData) {
+          const cpData = JSON.parse(storedData)
+          setCarePoints(cpData.balance || 0)
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load streak data:", error)
+    }
+  }
 
   const getTimelineIcon = (type: string) => {
     switch (type) {
@@ -229,25 +261,25 @@ export default function DoctorDashboard() {
                   <p className="text-xs text-muted-foreground">Patients Today</p>
                 </div>
                 <div className="glow-card rounded-2xl p-4 text-center">
-                  <div className="mb-2 flex h-10 w-10 mx-auto items-center justify-center rounded-xl bg-accent/20">
-                    <Send className="h-5 w-5 text-accent" />
+                  <div className="mb-2 flex h-10 w-10 mx-auto items-center justify-center rounded-xl bg-green-500/20">
+                    <TrendingUp className="h-5 w-5 text-green-400" />
                   </div>
-                  <p className="text-2xl font-bold text-foreground">8</p>
-                  <p className="text-xs text-muted-foreground">Referrals Sent</p>
+                  <p className="text-2xl font-bold text-foreground">{streakData.currentStreak}</p>
+                  <p className="text-xs text-muted-foreground">Day Streak</p>
                 </div>
                 <div className="glow-card rounded-2xl p-4 text-center">
-                  <div className="mb-2 flex h-10 w-10 mx-auto items-center justify-center rounded-xl bg-chart-3/20">
-                    <FlaskConical className="h-5 w-5 text-chart-3" />
+                  <div className="mb-2 flex h-10 w-10 mx-auto items-center justify-center rounded-xl bg-accent/20">
+                    <Coins className="h-5 w-5 text-accent" />
                   </div>
-                  <p className="text-2xl font-bold text-foreground">12</p>
-                  <p className="text-xs text-muted-foreground">Lab Results</p>
+                  <p className="text-2xl font-bold text-foreground">{carePoints}</p>
+                  <p className="text-xs text-muted-foreground">CarePoints</p>
                 </div>
                 <div className="glow-card rounded-2xl p-4 text-center">
                   <div className="mb-2 flex h-10 w-10 mx-auto items-center justify-center rounded-xl bg-chart-4/20">
-                    <MessageSquare className="h-5 w-5 text-chart-4" />
+                    <FileText className="h-5 w-5 text-chart-4" />
                   </div>
-                  <p className="text-2xl font-bold text-foreground">5</p>
-                  <p className="text-xs text-muted-foreground">Unread Messages</p>
+                  <p className="text-2xl font-bold text-foreground">{streakData.totalUploads}</p>
+                  <p className="text-xs text-muted-foreground">Records Uploaded</p>
                 </div>
               </div>
 
