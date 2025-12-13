@@ -119,7 +119,7 @@ Main Cardano Engineer(Dagim Tadesse)
 Operations Lead(Nathenael Tegegn)
 Built for the CATS Hackathon  
 Focused on practical, regenerative healthcare solutions using Cardano
-
+---
 ---
 
 ## 📄 License
