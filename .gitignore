@@ -54,3 +54,10 @@ node_modules/
 
 # Django migrations (ignore all except __init__.py)
 **/migrations/**
+
+# Django media uploads
+backend/media/
+media/
+
+__pycache__/
+*.pyc
