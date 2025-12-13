@@ -111,6 +111,7 @@ CATS-Group-2/
 ## 👥 Team
 
 **Team Axiom**  
+---
 Cardano Engineer and Team Lead (Yeabsera Sisay)
 Frontend / UX Lead(Yabets Maregn)
 Backend Engineer( Zahir Ahmed)
@@ -126,7 +127,4 @@ Focused on practical, regenerative healthcare solutions using Cardano
 This project is built for educational and hackathon purposes.
 ```
 
----
 
-
-But this version is **submission-ready right now**.
