@@ -4,6 +4,7 @@
 recovery-phrase.txt
 wallet-seed.txt
 mnemonic.txt
+*.vkey
 
 # Environment files
 .env

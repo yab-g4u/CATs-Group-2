@@ -1,6 +1,6 @@
 use aiken/collection/list
 use cardano/assets.{PolicyId}
-use cardano/transaction.{Transaction}
+use cardano/transaction.{Transaction, placeholder}
 
 // CarePoints minting policy (template)
 // Replace `OWNER_PUBKEY_HASH` with the hex PubKeyHash allowed to mint
@@ -38,4 +38,50 @@ validator carepoints_policy {
   else(_) {
     fail
   }
+}
+
+test valid_mint() {
+  let redeemer = Mint_Cpoint_Redeemer { quantity: 100 }
+  let policy_id = #""
+  let owner = #"08ee30a2e0e28b3eaf109642374971c5aa4675f5a0ff71dc8d5988ae"
+  let tx = Transaction { ..placeholder, extra_signatories: [owner] }
+  carepoints_policy.mint(redeemer, policy_id, tx) == True
+}
+
+test invalid_mint_no_signature() fail {
+  let redeemer = Mint_Cpoint_Redeemer { quantity: 100 }
+  let policy_id = #""
+  let tx = Transaction { ..placeholder, extra_signatories: [] }
+  carepoints_policy.mint(redeemer, policy_id, tx)
+}
+
+test invalid_mint_quantity_zero() fail {
+  let redeemer = Mint_Cpoint_Redeemer { quantity: 0 }
+  let policy_id = #""
+  let owner = #"08ee30a2e0e28b3eaf109642374971c5aa4675f5a0ff71dc8d5988ae"
+  let tx = Transaction { ..placeholder, extra_signatories: [owner] }
+  carepoints_policy.mint(redeemer, policy_id, tx)
+}
+
+test invalid_mint_quantity_too_large() fail {
+  let redeemer = Mint_Cpoint_Redeemer { quantity: 200000 }
+  let policy_id = #""
+  let owner = #"08ee30a2e0e28b3eaf109642374971c5aa4675f5a0ff71dc8d5988ae"
+  let tx = Transaction { ..placeholder, extra_signatories: [owner] }
+  carepoints_policy.mint(redeemer, policy_id, tx)
+}
+
+test valid_burn() {
+  let redeemer = Mint_Cpoint_Redeemer { quantity: -50 }
+  let policy_id = #""
+  let owner = #"08ee30a2e0e28b3eaf109642374971c5aa4675f5a0ff71dc8d5988ae"
+  let tx = Transaction { ..placeholder, extra_signatories: [owner] }
+  carepoints_policy.mint(redeemer, policy_id, tx) == True
+}
+
+test invalid_burn_no_signature() fail {
+  let redeemer = Mint_Cpoint_Redeemer { quantity: -50 }
+  let policy_id = #""
+  let tx = Transaction { ..placeholder, extra_signatories: [] }
+  carepoints_policy.mint(redeemer, policy_id, tx)
 }
