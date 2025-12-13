@@ -4,9 +4,7 @@
 recovery-phrase.txt
 wallet-seed.txt
 mnemonic.txt
-payment.skey
-payment.addr
-payment.vkey
+*.vkey
 
 # Environment files
 .env

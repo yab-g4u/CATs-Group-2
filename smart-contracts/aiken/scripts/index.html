@@ -45,7 +45,7 @@
         Blockfrost,
         Data,
         Constr,
-      } from "https://unpkg.com/lucid-cardano@0.8.3/web/mod.js";
+      } from "https://unpkg.com/lucid-cardano@0.10.11/web/mod.js";
 
       let lucid;
       let anchorValidator;
@@ -143,7 +143,7 @@
         const selectorHtml = `
           <div style="margin: 20px 0; padding: 15px; background: #f0f8ff; border-radius: 5px;">
             <h3>📋 Select Referral Record:</h3>
-            <select id="recordSelector" style="width: 100%; padding: 8px; margin: 10px 0;" onchange="updateSelectedRecord(this.value)">
+            <select id="recordSelector" style="width: 100%; padding: 8px; margin: 10px 0;">
               ${patientRecords
                 .map(
                   (record, index) => `
@@ -162,6 +162,15 @@
         const statusDiv = document.getElementById("status");
         if (statusDiv) {
           statusDiv.insertAdjacentHTML("afterend", selectorHtml);
+
+          // Add event listener to the newly created select element
+          const recordSelector = document.getElementById("recordSelector");
+          if (recordSelector) {
+            recordSelector.addEventListener("change", (e) => {
+              console.log("🔄 Record selector changed to:", e.target.value);
+              updateSelectedRecord(e.target.value);
+            });
+          }
         }
       }
 
@@ -246,7 +255,12 @@
           // Get selected patient record from loaded data
           const selectedRecord =
             patientRecords[selectedRecordIndex] || patientRecords[0];
-          console.log("Using patient record:", selectedRecord);
+          console.log("🔍 Selected record index:", selectedRecordIndex);
+          console.log("📋 Using patient record:", selectedRecord);
+          console.log(
+            "🎯 Diagnosis should be:",
+            selectedRecord.record.diagnosis
+          );
 
           // Extract real referral data
           const issuerId = addrDetails.paymentCredential.hash; // Doctor's wallet key hash
@@ -351,21 +365,39 @@
 
           try {
             console.log("Creating minting-only transaction...");
+            console.log("📊 Metadata lengths check:");
+            console.log("issuer:", issuerId.length, "chars");
+            console.log("record_hash:", referralHash.length, "chars");
+            console.log(
+              "message:",
+              `DINA Referral: ${diagnosis} - ${treatment} for patient ${patientId}`
+                .length,
+              "chars"
+            );
             const mintTx = await lucid
               .newTx()
               .mintAssets({ [cpUnit]: 10n }) // Mint 10 CP reward
               .attachMintingPolicy(cpPolicy)
               .attachMetadata(674, {
-                issuer: issuerId,
-                patient_id: patientId,
-                record_hash: referralHash,
-                diagnosis: diagnosis,
-                treatment: treatment,
-                record_date: recordDate,
-                timestamp: issuedAt,
-                message: `DINA Referral: ${diagnosis} - ${treatment} for patient ${patientId}`,
+                issuer: issuerId.substring(0, 64),
+                patient_id: patientId.substring(0, 64),
+                record_hash: referralHash.substring(0, 64),
+                diagnosis: diagnosis.substring(0, 64),
+                treatment: treatment.substring(0, 64),
+                record_date: recordDate.substring(0, 64),
+                timestamp: String(issuedAt).substring(0, 64),
+                message: `DINA Referral: ${diagnosis.substring(
+                  0,
+                  20
+                )} - ${treatment.substring(
+                  0,
+                  20
+                )} for patient ${patientId}`.substring(0, 64),
                 anchored_by:
-                  "signature-based minting (validator enhancement pending)",
+                  "signature-based minting (validator pending)".substring(
+                    0,
+                    64
+                  ),
               })
               .complete();
 
@@ -386,15 +418,20 @@
               )}...\n\n✅ Real medical data now stored immutably on Cardano!\n\n⚠️ Note: Using signature-based minting (validator datum enhancement pending)\n\n🔗 View on explorer: https://preprod.cardanoscan.io/transaction/${mintTxHash}`
             );
           } catch (mintError) {
-            console.error("Transaction error:", mintError.message);
+            console.error("Transaction error:", mintError);
+            const errorMessage =
+              mintError?.message || mintError?.toString() || "Unknown error";
 
-            if (mintError.message.includes("user declined")) {
+            if (
+              errorMessage.includes("user declined") ||
+              errorMessage.includes("declined")
+            ) {
               alert(
                 `⏸️ Transaction Canceled\n\nYou declined to sign the transaction in Eternl.\n\n🔄 Try again and approve the transaction in your wallet!\n\nThe minting system is working perfectly - you just need to approve it.`
               );
             } else {
               alert(
-                `❌ Minting Error: ${mintError.message}\n\nCheck:\n- Wallet connection\n- Sufficient ADA balance\n- Minting policy validity`
+                `❌ Minting Error: ${errorMessage}\n\nCheck:\n- Wallet connection\n- Sufficient ADA balance\n- Minting policy validity`
               );
             }
             throw mintError;
