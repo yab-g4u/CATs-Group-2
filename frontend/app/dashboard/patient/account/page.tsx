@@ -70,7 +70,7 @@ export default function PatientAccountPage() {
   const [patientProfile, setPatientProfile] = useState<PatientProfile | null>(null)
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null)
   const [userInfo, setUserInfo] = useState(getCurrentUser())
-  
+
   const [profileData, setProfileData] = useState<ProfileFormData>({
     firstName: userInfo?.full_name?.split(" ")[0] || "",
     lastName: userInfo?.full_name?.split(" ").slice(1).join(" ") || "",
@@ -100,7 +100,7 @@ export default function PatientAccountPage() {
         getPatientProfile().catch(() => null),
         getPatientQRCode().catch(() => ({ qr_code_url: null })),
       ])
-      
+
       if (profile) {
         setPatientProfile(profile)
         setProfileData(prev => ({
@@ -199,11 +199,10 @@ export default function PatientAccountPage() {
               <li key={item.label}>
                 <Link
                   href={item.href}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                    item.active
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${item.active
                       ? "glow-card bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                  }`}
+                    }`}
                 >
                   <item.icon className="h-5 w-5" />
                   {item.label}
@@ -245,7 +244,7 @@ export default function PatientAccountPage() {
             <div className="lg:col-span-1">
               <div className="glow-card rounded-2xl p-6">
                 <h2 className="mb-4 text-xl font-semibold text-foreground">Patient ID Card</h2>
-                
+
                 {/* Flipable ID Card */}
                 <div className="relative h-[400px]" style={{ perspective: "1000px" }}>
                   <div
@@ -275,13 +274,13 @@ export default function PatientAccountPage() {
                             <QrCode className="h-4 w-4" />
                           </Button>
                         </div>
-                        
+
                         <div className="flex-1 flex flex-col items-center justify-center gap-4">
                           <Avatar className="h-24 w-24 border-4 border-primary/50">
                             <AvatarImage src="/placeholder.jpg" />
                             <AvatarFallback className="text-2xl">SL</AvatarFallback>
                           </Avatar>
-                          
+
                           <div className="text-center">
                             <h3 className="text-xl font-bold text-foreground">
                               {profileData.firstName} {profileData.lastName}
@@ -293,7 +292,7 @@ export default function PatientAccountPage() {
                         <div className="mt-auto space-y-2 text-sm">
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">ID Number:</span>
-                            <span className="font-semibold text-foreground">{generatedId}</span>
+                            <span className="font-semibold text-foreground">{patientId}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Date of Birth:</span>
@@ -333,7 +332,7 @@ export default function PatientAccountPage() {
                             <X className="h-4 w-4" />
                           </Button>
                         </div>
-                        
+
                         <div className="flex-1 flex flex-col items-center justify-center">
                           {qrCodeUrl ? (
                             <div className="w-48 h-48 bg-white rounded-lg p-4 flex items-center justify-center border-2 border-border mb-4 overflow-hidden">
@@ -358,9 +357,9 @@ export default function PatientAccountPage() {
                             {qrCodeUrl ? "Your QR Code" : isLoading ? "Loading..." : "No QR Code Available"}
                           </p>
                         </div>
-                        
+
                         <div className="mt-auto text-center">
-                          <p className="text-xs text-muted-foreground">Patient ID: {generatedId}</p>
+                          <p className="text-xs text-muted-foreground">Patient ID: {patientId}</p>
                         </div>
                       </div>
                     </div>
