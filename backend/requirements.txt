@@ -1,37 +1,37 @@
 # Django Core
-Django==5.2.8
-django-ninja==1.1.0
-django-ninja-jwt==5.4.2
+Django
+django-ninja
+django-ninja-jwt
 
 # REST Framework
-djangorestframework==3.15.2
-djangorestframework-simplejwt==5.3.1
+djangorestframework
+djangorestframework-simplejwt
 
 # CORS
-django-cors-headers==4.4.0
+django-cors-headers
 
 # WebSockets
-channels==4.1.0
-channels-redis==4.2.0
+channels
+channels-redis
 
 # Image Processing
-Pillow==10.4.0
+Pillow
 
 # QR Code Generation
-qrcode[pil]==7.4.2
+qrcode[pil]
 
 # HTTP Requests
-requests==2.32.3
+requests
 
 # Data Validation
-pydantic==2.9.2
-pydantic[email]==2.9.2
+pydantic
+pydantic[email]
 
 # Environment Variables
-python-dotenv==1.0.1
+python-dotenv
 
 # Production Server
-gunicorn==23.0.0
+gunicorn
 
 # Database (PostgreSQL if needed in production)
-# psycopg2-binary==2.9.9
+# psycopg2-binary
