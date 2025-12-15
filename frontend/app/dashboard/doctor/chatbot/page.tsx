@@ -26,6 +26,8 @@ import { Textarea } from "@/components/ui/textarea"
 const sidebarNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/doctor" },
   { icon: Users, label: "My Patients", href: "/dashboard/doctor/patients" },
+  { icon: Calendar, label: "Appointments", href: "/dashboard/doctor/appointments" },
+  { icon: Send, label: "Referrals", href: "/dashboard/doctor/referrals" },
   { icon: UserPlus, label: "Create Patient", href: "/dashboard/doctor/create-patient" },
   { icon: Wallet, label: "CarePoints Wallet", href: "/dashboard/doctor/wallet" },
   { icon: MessageSquare, label: "Chatbot", href: "/dashboard/doctor/chatbot", active: true },

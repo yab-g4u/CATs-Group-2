@@ -21,16 +21,20 @@ import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { toast } from "sonner"
+import { getDoctorCarePoints } from "@/lib/api"
+import { Calendar, Send } from "lucide-react"
 
 const sidebarNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/doctor" },
   { icon: Users, label: "My Patients", href: "/dashboard/doctor/patients" },
+  { icon: Calendar, label: "Appointments", href: "/dashboard/doctor/appointments" },
+  { icon: Send, label: "Referrals", href: "/dashboard/doctor/referrals" },
   { icon: UserPlus, label: "Create Patient", href: "/dashboard/doctor/create-patient" },
   { icon: Wallet, label: "CarePoints Wallet", href: "/dashboard/doctor/wallet", active: true },
   { icon: MessageSquare, label: "Chatbot", href: "/dashboard/doctor/chatbot" },
 ]
 
-const sidebarBottomItems = [{ icon: User, label: "Account", href: "/dashboard/doctor/account" }]
+const sidebarBottomItems = [{ icon: Users, label: "Account", href: "/dashboard/doctor/account" }]
 
 interface CarePointsData {
   balance: number
@@ -64,29 +68,14 @@ export default function CarePointsWalletPage() {
   const loadCarePointsData = async () => {
     try {
       setIsLoading(true)
-      const doctorId = "doctor_1" // In production, get from auth context
+      const data = await getDoctorCarePoints()
 
-      // Fetch streak data
-      const streakResponse = await fetch(`/api/doctor/streak?doctorId=${doctorId}`)
-      const streakData = await streakResponse.json()
-
-      // Calculate CarePoints from localStorage or mock data
-      const storedData = localStorage.getItem(`carepoints_${doctorId}`)
-      let carePointsData: CarePointsData
-
-      if (storedData) {
-        carePointsData = JSON.parse(storedData)
-      } else {
-        carePointsData = {
-          balance: 0,
-          currentStreak: streakData.currentStreak || 0,
-          totalEarned: 0,
-          history: [],
-        }
-      }
-
-      carePointsData.currentStreak = streakData.currentStreak || 0
-      setCarePoints(carePointsData)
+      setCarePoints({
+        balance: data.balance,
+        currentStreak: data.current_streak,
+        totalEarned: data.balance, // Simplified, ideally backend gives total earned lifetime
+        history: [] // We can add transaction history endpoint later if needed
+      })
     } catch (error) {
       console.error("Failed to load CarePoints data:", error)
       toast.error("Failed to load wallet data")

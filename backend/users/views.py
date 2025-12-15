@@ -155,6 +155,13 @@ def get_profile(request):
         "role": user.role,
         "language": user.language,
         "elder_mode": user.elder_mode,
+        # Doctor Profile
+        "specialization": getattr(user, "specialization", ""),
+        "license_number": getattr(user, "license_number", ""),
+        "hospital": getattr(user, "hospital", ""),
+        "years_experience": getattr(user, "years_experience", None),
+        "address": getattr(user, "address", ""),
+        "bio": getattr(user, "bio", ""),
     }
 
 
@@ -163,12 +170,32 @@ def update_profile(request, data: UserProfileUpdateSchema):
 
     user = request.auth
 
+    if data.full_name is not None:
+        user.full_name = data.full_name
+    if data.email is not None:
+        user.email = data.email
+    if data.phone is not None:
+        user.phone = data.phone
     if data.language is not None:
         user.language = data.language
     if data.elder_mode is not None:
         user.elder_mode = data.elder_mode
     if data.emergency_contact is not None:
         user.emergency_contact = data.emergency_contact
+    
+    # Doctor Profile
+    if data.specialization is not None:
+        user.specialization = data.specialization
+    if data.license_number is not None:
+        user.license_number = data.license_number
+    if data.hospital is not None:
+        user.hospital = data.hospital
+    if data.years_experience is not None:
+        user.years_experience = data.years_experience
+    if data.address is not None:
+        user.address = data.address
+    if data.bio is not None:
+        user.bio = data.bio
 
     user.save()
     return BaseResponse(success=True, message="Profile updated successfully")

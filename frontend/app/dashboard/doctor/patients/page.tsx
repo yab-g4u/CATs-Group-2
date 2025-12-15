@@ -34,7 +34,9 @@ import { toast } from "sonner"
 
 const sidebarNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/doctor" },
-  { icon: Users, label: "Patients", href: "/dashboard/doctor/patients", active: true },
+  { icon: Users, label: "My Patients", href: "/dashboard/doctor/patients", active: true },
+  { icon: Calendar, label: "Appointments", href: "/dashboard/doctor/appointments" },
+  { icon: Send, label: "Referrals", href: "/dashboard/doctor/referrals" },
   { icon: UserPlus, label: "Create Patient", href: "/dashboard/doctor/create-patient" },
   { icon: Wallet, label: "CarePoints Wallet", href: "/dashboard/doctor/wallet" },
   { icon: MessageSquare, label: "Chatbot", href: "/dashboard/doctor/chatbot" },
@@ -253,7 +255,7 @@ export default function DoctorPatientsPage() {
                         <AvatarFallback>
                           {patient.name
                             .split(" ")
-                            .map((n) => n[0])
+                            .map((n: string) => n[0])
                             .join("")}
                         </AvatarFallback>
                       </Avatar>
@@ -281,7 +283,7 @@ export default function DoctorPatientsPage() {
                         <AvatarFallback>
                           {selectedPatient.name
                             .split(" ")
-                            .map((n) => n[0])
+                            .map((n: string) => n[0])
                             .join("")}
                         </AvatarFallback>
                       </Avatar>

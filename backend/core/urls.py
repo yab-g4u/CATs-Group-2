@@ -23,15 +23,18 @@ from ninja import NinjaAPI
 from users.views import router as auth_router
 from doctors.views import router as doctor_router
 from patients.views import router as patient_router
+from patients.views import router as patient_router
 from hospitals.views import router as hospital_router
+from referrals.views import router as referral_router
 
 
 api = NinjaAPI(title="CATs Backend API")
 
 # Mount routers
-api.add_router("/auth", auth_router, tags=["auth"])
+api.add_router("/users", auth_router, tags=["auth"])
 api.add_router("/doctor", doctor_router, tags=["doctor"])
 api.add_router("/patient", patient_router, tags=["patient"])
+api.add_router("/referrals", referral_router, tags=["referrals"])
 api.add_router("", hospital_router, tags=["hospital"])
 
 

@@ -17,6 +17,8 @@ import {
   UserPlus,
   Coins,
   Wallet,
+  Calendar,
+  Send,
 } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
@@ -34,6 +36,8 @@ import { useEffect } from "react"
 const sidebarNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/doctor" },
   { icon: Users, label: "My Patients", href: "/dashboard/doctor/patients" },
+  { icon: Calendar, label: "Appointments", href: "/dashboard/doctor/appointments" },
+  { icon: Send, label: "Referrals", href: "/dashboard/doctor/referrals" },
   { icon: UserPlus, label: "Create Patient", href: "/dashboard/doctor/create-patient", active: true },
   { icon: Wallet, label: "CarePoints Wallet", href: "/dashboard/doctor/wallet" },
   { icon: MessageSquare, label: "Chatbot", href: "/dashboard/doctor/chatbot" },

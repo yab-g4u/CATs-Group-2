@@ -1,11 +1,10 @@
 from django.contrib import admin
-from .models import User, OTPCode
+from .models import User
 from doctors.models import DoctorProfile, Appointment, CarePointsTransaction
 from patients.models import PatientProfile, Visit, Medication, LabResult
 
 # Register User models
 admin.site.register(User)
-admin.site.register(OTPCode)
 
 # Register Doctor models
 admin.site.register(DoctorProfile)

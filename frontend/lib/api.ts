@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://cats-group-2-1.onrender.com/api"
 
 /**
  * Get the authentication token from localStorage
@@ -24,7 +24,7 @@ async function apiRequest<T>(
   }
 
   if (token) {
-    headers["Authorization"] = `Bearer ${token}`
+    (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`
   }
 
   const response = await fetch(url, {
@@ -129,6 +129,24 @@ export interface Visit {
 
 export async function getPatientVisits(): Promise<Visit[]> {
   return apiRequest<Visit[]>("/patient/visits/")
+}
+
+export interface CreateVisitRequest {
+  patient_id: number
+  summary: string
+  diagnosis?: string
+  cardano_hash?: string
+}
+
+export async function createVisit(data: CreateVisitRequest): Promise<Visit> {
+  return apiRequest<Visit>("/doctor/visit/", {
+    method: "POST",
+    body: JSON.stringify(data),
+  })
+}
+
+export async function getDoctorVisits(): Promise<Visit[]> {
+  return apiRequest<Visit[]>("/doctor/visits/")
 }
 
 /**
@@ -344,11 +362,29 @@ export interface UserProfile {
   role: string
   language: string
   elder_mode: boolean
+  // Doctor/Professional Profile
+  specialization?: string
+  license_number?: string
+  hospital?: string
+  years_experience?: number
+  address?: string
+  bio?: string
 }
 
 export interface UpdateProfileRequest {
+  full_name?: string
+  email?: string
+  phone?: string
   language?: string
   elder_mode?: boolean
+  emergency_contact?: string
+  // Doctor Profile
+  specialization?: string
+  license_number?: string
+  hospital?: string
+  years_experience?: number
+  address?: string
+  bio?: string
 }
 
 // Auth APIs
@@ -408,6 +444,49 @@ export async function signupUser(data: SignupRequest): Promise<SimpleAuthRespons
   }
 
   return response.json()
+}
+
+/**
+ * Referral APIs
+ */
+export interface CreateReferralRequest {
+  patient_id: number
+  to_hospital: string
+  summary: string
+  notes?: string
+}
+
+export interface Referral {
+  id: number
+  patient_name: string
+  to_hospital: string
+  status: string
+  summary: string
+  created_at: string
+  notes?: string
+}
+
+export async function createReferral(data: CreateReferralRequest): Promise<Referral> {
+  return apiRequest<Referral>("/referrals/create/", {
+    method: "POST",
+    body: JSON.stringify(data),
+  })
+}
+
+export async function getDoctorReferrals(): Promise<Referral[]> {
+  return apiRequest<Referral[]>("/referrals/list/")
+}
+
+export interface ReferralUpdate {
+  status: string
+  notes?: string
+}
+
+export async function updateReferralStatus(referralId: number, data: ReferralUpdate): Promise<Referral> {
+  return apiRequest<Referral>(`/referrals/${referralId}/status/`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  })
 }
 
 export async function getUserProfile(): Promise<UserProfile> {

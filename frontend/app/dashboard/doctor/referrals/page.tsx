@@ -22,10 +22,20 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { getDoctorReferrals, createReferral, Referral, getDoctorPatients, DoctorPatient, updateReferralStatus } from "@/lib/api"
+import { useState, useEffect } from "react"
+import { toast } from "sonner"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { useRouter } from "next/navigation"
 
 const sidebarNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/doctor" },
   { icon: Users, label: "My Patients", href: "/dashboard/doctor/patients" },
+  { icon: Calendar, label: "Appointments", href: "/dashboard/doctor/appointments" },
+  { icon: Send, label: "Referrals", href: "/dashboard/doctor/referrals", active: true },
   { icon: UserPlus, label: "Create Patient", href: "/dashboard/doctor/create-patient" },
   { icon: Wallet, label: "CarePoints Wallet", href: "/dashboard/doctor/wallet" },
   { icon: MessageSquare, label: "Chatbot", href: "/dashboard/doctor/chatbot" },
@@ -33,35 +43,90 @@ const sidebarNavItems = [
 
 const sidebarBottomItems = [{ icon: Users, label: "Account", href: "/dashboard/doctor/account" }]
 
-const referrals = [
-  {
-    id: "REF-001",
-    patient: "Abebe Bekele",
-    reason: "Cardiology consult",
-    status: "pending",
-    to: "Cardiologist - St. Paul's Hospital",
-    date: "Dec 10, 2025",
-  },
-  {
-    id: "REF-002",
-    patient: "Tigist Haile",
-    reason: "Endocrinology follow-up",
-    status: "sent",
-    to: "Endocrinology - Tikur Anbessa",
-    date: "Dec 8, 2025",
-  },
-  {
-    id: "REF-003",
-    patient: "Dawit Mengistu",
-    reason: "Physiotherapy program",
-    status: "accepted",
-    to: "Physiotherapy - ALERT Hospital",
-    date: "Dec 6, 2025",
-  },
-]
-
 export default function DoctorReferralsPage() {
   const { theme, toggleTheme, mounted } = useTheme()
+  const router = useRouter()
+  const [referrals, setReferrals] = useState<Referral[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [patients, setPatients] = useState<DoctorPatient[]>([])
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [selectedReferral, setSelectedReferral] = useState<Referral | null>(null)
+
+  const [formData, setFormData] = useState({
+    patientId: "",
+    toHospital: "",
+    summary: "",
+    notes: ""
+  })
+
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  const loadData = async () => {
+    try {
+      setIsLoading(true)
+      const [refs, pats] = await Promise.all([
+        getDoctorReferrals(),
+        getDoctorPatients()
+      ])
+      setReferrals(refs)
+      setPatients(pats)
+    } catch (error) {
+      console.error("Failed to load data:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleCreateReferral = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formData.patientId || !formData.toHospital || !formData.summary) return
+
+    try {
+      setIsSubmitting(true)
+      await createReferral({
+        patient_id: parseInt(formData.patientId),
+        to_hospital: formData.toHospital,
+        summary: formData.summary,
+        notes: formData.notes
+      })
+
+      // Refresh list
+      const refs = await getDoctorReferrals()
+      setReferrals(refs)
+      setShowCreateModal(false)
+      setFormData({ patientId: "", toHospital: "", summary: "", notes: "" })
+    } catch (error) {
+      console.error("Failed to create referral:", error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleUpdateStatus = async (status: string) => {
+    if (!selectedReferral) {
+      toast.error("Please select a referral first")
+      return
+    }
+
+    try {
+      setIsSubmitting(true)
+      await updateReferralStatus(selectedReferral.id, { status })
+      toast.success(`Referral ${status}`)
+
+      // Refresh list
+      const refs = await getDoctorReferrals()
+      setReferrals(refs)
+      setSelectedReferral(null)
+    } catch (error) {
+      console.error("Failed to update referral:", error)
+      toast.error("Failed to update referral status")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -150,7 +215,7 @@ export default function DoctorReferralsPage() {
               <h1 className="text-3xl font-bold text-foreground">Referrals</h1>
               <p className="mt-1 text-muted-foreground">Sample referral workflow</p>
             </div>
-            <Button className="gap-2">
+            <Button className="gap-2" onClick={() => setShowCreateModal(true)}>
               <Send className="h-4 w-4" />
               New Referral
             </Button>
@@ -158,44 +223,45 @@ export default function DoctorReferralsPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-3">
-              {referrals.map((referral) => (
-                <div
-                  key={referral.id}
-                  className="rounded-2xl border border-border bg-card/60 p-4 transition-all hover:border-primary/30"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs text-muted-foreground">{referral.id}</p>
-                      <h3 className="text-lg font-semibold text-foreground">{referral.patient}</h3>
-                      <p className="text-sm text-muted-foreground">{referral.reason}</p>
-                      <p className="mt-1 text-sm text-foreground">{referral.to}</p>
-                      <p className="text-xs text-muted-foreground">Date: {referral.date}</p>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full ${referral.status === "accepted"
-                          ? "bg-primary/15 text-primary"
-                          : referral.status === "sent"
-                            ? "bg-accent/15 text-accent"
-                            : "bg-amber-100 text-amber-700"
-                          }`}
-                      >
-                        {referral.status}
-                      </span>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="gap-1">
-                          <FileText className="h-4 w-4" />
-                          View
-                        </Button>
-                        <Button variant="outline" size="sm" className="gap-1">
-                          <Send className="h-4 w-4" />
-                          Resend
-                        </Button>
+              {isLoading ? (
+                <div className="text-center py-8 text-muted-foreground">Loading referrals...</div>
+              ) : referrals.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">No referrals yet. Create one to earn CarePoints!</div>
+              ) : (
+                referrals.map((referral) => (
+                  <div
+                    key={referral.id}
+                    onClick={() => setSelectedReferral(referral)}
+                    className={`rounded-2xl border p-4 transition-all cursor-pointer ${selectedReferral?.id === referral.id
+                      ? "border-primary bg-primary/5"
+                      : "border-border bg-card/60 hover:border-primary/30"
+                      }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs text-muted-foreground">REF-{referral.id}</p>
+                        <h3 className="text-lg font-semibold text-foreground">{referral.patient_name}</h3>
+                        <p className="text-sm text-muted-foreground">{referral.summary}</p>
+                        <p className="mt-1 text-sm text-foreground">To: {referral.to_hospital}</p>
+                        <p className="text-xs text-muted-foreground">Date: {new Date(referral.created_at).toLocaleDateString()}</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full ${referral.status === "accepted"
+                            ? "bg-primary/15 text-primary"
+                            : referral.status === "sent"
+                              ? "bg-accent/15 text-accent"
+                              : "bg-amber-100 text-amber-700"
+                            }`}
+                        >
+                          {referral.status}
+                        </span>
+                        {/* View button removed as requested */}
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
 
             <div className="space-y-4">
@@ -223,15 +289,25 @@ export default function DoctorReferralsPage() {
               <div className="glow-card rounded-2xl p-5">
                 <h3 className="mb-3 font-semibold text-foreground">Quick Actions</h3>
                 <div className="space-y-2">
-                  <Button className="w-full gap-2">
+                  <Button className="w-full gap-2" onClick={() => setShowCreateModal(true)}>
                     <Send className="h-4 w-4" />
                     Create Referral
                   </Button>
-                  <Button variant="outline" className="w-full gap-2">
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2"
+                    onClick={() => handleUpdateStatus("accepted")}
+                    disabled={!selectedReferral || isSubmitting}
+                  >
                     <Check className="h-4 w-4" />
                     Mark as Accepted
                   </Button>
-                  <Button variant="outline" className="w-full gap-2">
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2 text-destructive hover:text-destructive"
+                    onClick={() => handleUpdateStatus("cancelled")}
+                    disabled={!selectedReferral || isSubmitting}
+                  >
                     <X className="h-4 w-4" />
                     Cancel Referral
                   </Button>
@@ -241,6 +317,60 @@ export default function DoctorReferralsPage() {
           </div>
         </div>
       </main>
+      {/* Create Referral Modal */}
+      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Referral</DialogTitle>
+            <DialogDescription>Refer a patient to a specialist or hospital.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreateReferral} className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label>Patient</Label>
+              <Select onValueChange={(val) => setFormData({ ...formData, patientId: val })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select patient" />
+                </SelectTrigger>
+                <SelectContent>
+                  {patients.map(p => (
+                    <SelectItem key={p.id} value={p.id.toString()}>{p.full_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>To Hospital/Specialist</Label>
+              <Input
+                placeholder="e.g. St. Paul's - Cardiology"
+                value={formData.toHospital}
+                onChange={e => setFormData({ ...formData, toHospital: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Summary/Reason</Label>
+              <Textarea
+                placeholder="Reason for referral..."
+                value={formData.summary}
+                onChange={e => setFormData({ ...formData, summary: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Notes (Optional)</Label>
+              <Textarea
+                placeholder="Additional notes"
+                value={formData.notes}
+                onChange={e => setFormData({ ...formData, notes: e.target.value })}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>Cancel</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Creating..." : "Create Referral"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

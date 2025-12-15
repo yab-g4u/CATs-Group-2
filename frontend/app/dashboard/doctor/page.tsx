@@ -43,6 +43,8 @@ import { useAuth } from "@/lib/auth-context"
 const sidebarNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/doctor", active: true },
   { icon: Users, label: "My Patients", href: "/dashboard/doctor/patients" },
+  { icon: Calendar, label: "Appointments", href: "/dashboard/doctor/appointments" },
+  { icon: Send, label: "Referrals", href: "/dashboard/doctor/referrals" },
   { icon: UserPlus, label: "Create Patient", href: "/dashboard/doctor/create-patient" },
   { icon: Wallet, label: "CarePoints Wallet", href: "/dashboard/doctor/wallet" },
   { icon: MessageSquare, label: "Chatbot", href: "/dashboard/doctor/chatbot" },
@@ -62,6 +64,7 @@ export default function DoctorDashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const [appointments, setAppointments] = useState<any[]>([])
   const [patientTimeline, setPatientTimeline] = useState<any[]>([])
+  const [showNotifications, setShowNotifications] = useState(false)
   const [notifications, setNotifications] = useState<any[]>([])
 
   // Doctor name from auth context
@@ -194,8 +197,8 @@ export default function DoctorDashboard() {
                 <Link
                   href={item.href}
                   className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${item.active
-                      ? "glow-card bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    ? "glow-card bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                     }`}
                 >
                   <item.icon className="h-5 w-5" />
@@ -232,10 +235,47 @@ export default function DoctorDashboard() {
             <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-10 w-10 rounded-full">
               {mounted && theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
-            <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative h-10 w-10 rounded-full"
+              onClick={() => setShowNotifications(!showNotifications)}
+            >
               <Bell className="h-5 w-5" />
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive" />
+              {notifications.length > 0 && (
+                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive" />
+              )}
             </Button>
+
+            {/* Notification Popover */}
+            {showNotifications && (
+              <div className="absolute top-20 right-8 z-50 w-80 rounded-2xl border border-border bg-card shadow-xl p-4 animate-in fade-in slide-in-from-top-2">
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="font-semibold text-foreground">Notifications</h3>
+                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setShowNotifications(false)}>
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+                {notifications.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <Bell className="h-10 w-10 text-muted-foreground/30 mb-2" />
+                    <p className="text-sm text-muted-foreground">No new notifications</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                    {notifications.map((note) => (
+                      <div key={note.id} className="rounded-xl border border-border bg-card/50 p-3">
+                        <div className="flex items-center justify-between">
+                          <p className="font-medium text-foreground">{note.title}</p>
+                          <span className="text-xs text-muted-foreground">{note.time}</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">{note.detail}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </header>
 
@@ -258,10 +298,6 @@ export default function DoctorDashboard() {
                 <Send className="h-5 w-5" />
                 Create Referral
               </Button>
-              <Button onClick={() => setActiveModal("upload")} variant="outline" className="glow-card gap-2">
-                <Upload className="h-5 w-5" />
-                Upload Results
-              </Button>
             </div>
           </div>
 
@@ -274,7 +310,7 @@ export default function DoctorDashboard() {
                   <div className="mb-2 flex h-10 w-10 mx-auto items-center justify-center rounded-xl bg-primary/20">
                     <Users className="h-5 w-5 text-primary" />
                   </div>
-                  <p className="text-2xl font-bold text-foreground">24</p>
+                  <p className="text-2xl font-bold text-foreground">{recentPatients.length}</p>
                   <p className="text-xs text-muted-foreground">Patients Today</p>
                 </div>
                 <div className="glow-card rounded-2xl p-4 text-center">
@@ -317,8 +353,8 @@ export default function DoctorDashboard() {
                         key={patient.id}
                         onClick={() => setSelectedPatient(patient)}
                         className={`flex items-center justify-between rounded-xl border p-3 cursor-pointer transition-all ${selectedPatient?.id === patient.id
-                            ? "border-primary/50 bg-primary/10"
-                            : "border-border bg-card hover:border-primary/20"
+                          ? "border-primary/50 bg-primary/10"
+                          : "border-border bg-card hover:border-primary/20"
                           }`}
                       >
                         <div className="flex items-center gap-3">
@@ -380,10 +416,6 @@ export default function DoctorDashboard() {
                         <p className="text-sm text-muted-foreground">Medical Timeline</p>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm" className="gap-2 bg-transparent">
-                      <FileText className="h-4 w-4" />
-                      Full Record
-                    </Button>
                   </div>
                   <div className="relative pl-6">
                     <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-accent to-transparent" />
@@ -473,190 +505,196 @@ export default function DoctorDashboard() {
             </div>
           </div>
         </div>
-      </main>
+      </main >
 
       {/* QR Scanner Modal */}
-      {activeModal === "qr" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="glow-card w-full max-w-md rounded-2xl bg-card p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-foreground">QR Scanner</h3>
-              <Button variant="ghost" size="icon" onClick={() => setActiveModal(null)}>
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-            <div className="flex flex-col items-center">
-              <div className="mb-4 flex h-64 w-64 items-center justify-center rounded-2xl border-2 border-dashed border-primary/50 bg-secondary/30">
-                {isScanning ? (
-                  <div className="text-center">
-                    <div className="animate-pulse">
-                      <QrCode className="mx-auto h-16 w-16 text-primary" />
-                    </div>
-                    <p className="mt-2 text-sm text-muted-foreground">Scanning...</p>
-                  </div>
-                ) : (
-                  <div className="text-center">
-                    <Camera className="mx-auto h-12 w-12 text-muted-foreground" />
-                    <p className="mt-2 text-sm text-muted-foreground">Position QR code here</p>
-                  </div>
-                )}
+      {
+        activeModal === "qr" && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div className="glow-card w-full max-w-md rounded-2xl bg-card p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-foreground">QR Scanner</h3>
+                <Button variant="ghost" size="icon" onClick={() => setActiveModal(null)}>
+                  <X className="h-5 w-5" />
+                </Button>
               </div>
-              <Button onClick={() => setIsScanning(!isScanning)} className="w-full gap-2">
-                <Camera className="h-5 w-5" />
-                {isScanning ? "Stop Scanning" : "Start Scanner"}
-              </Button>
-              <p className="mt-4 text-center text-xs text-muted-foreground">
-                Scan patient's QR code to quickly access their medical records
-              </p>
+              <div className="flex flex-col items-center">
+                <div className="mb-4 flex h-64 w-64 items-center justify-center rounded-2xl border-2 border-dashed border-primary/50 bg-secondary/30">
+                  {isScanning ? (
+                    <div className="text-center">
+                      <div className="animate-pulse">
+                        <QrCode className="mx-auto h-16 w-16 text-primary" />
+                      </div>
+                      <p className="mt-2 text-sm text-muted-foreground">Scanning...</p>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <Camera className="mx-auto h-12 w-12 text-muted-foreground" />
+                      <p className="mt-2 text-sm text-muted-foreground">Position QR code here</p>
+                    </div>
+                  )}
+                </div>
+                <Button onClick={() => setIsScanning(!isScanning)} className="w-full gap-2">
+                  <Camera className="h-5 w-5" />
+                  {isScanning ? "Stop Scanning" : "Start Scanner"}
+                </Button>
+                <p className="mt-4 text-center text-xs text-muted-foreground">
+                  Scan patient's QR code to quickly access their medical records
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Create Referral Modal */}
-      {activeModal === "referral" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="glow-card w-full max-w-lg rounded-2xl bg-card p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-foreground">Create Referral</h3>
-              <Button variant="ghost" size="icon" onClick={() => setActiveModal(null)}>
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="patient">Patient</Label>
-                <Select>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select patient" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {recentPatients.map((p) => (
-                      <SelectItem key={p.id} value={p.id.toString()}>
-                        {p.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="specialist">Refer To</Label>
-                <Select>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select specialist" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cardio">Cardiologist</SelectItem>
-                    <SelectItem value="neuro">Neurologist</SelectItem>
-                    <SelectItem value="ortho">Orthopedist</SelectItem>
-                    <SelectItem value="derm">Dermatologist</SelectItem>
-                    <SelectItem value="ent">ENT Specialist</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="hospital">Hospital</Label>
-                <Select>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select hospital" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="tikur">Tikur Anbessa Hospital</SelectItem>
-                    <SelectItem value="st-paul">St. Paul's Hospital</SelectItem>
-                    <SelectItem value="alert">ALERT Hospital</SelectItem>
-                    <SelectItem value="zewditu">Zewditu Memorial Hospital</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="reason">Reason for Referral</Label>
-                <Textarea
-                  id="reason"
-                  placeholder="Describe the reason for this referral..."
-                  className="mt-1 min-h-24"
-                />
-              </div>
-              <div className="flex gap-3 pt-2">
-                <Button variant="outline" className="flex-1 bg-transparent" onClick={() => setActiveModal(null)}>
-                  Cancel
-                </Button>
-                <Button className="flex-1 gap-2">
-                  <Send className="h-4 w-4" />
-                  Send Referral
+      {
+        activeModal === "referral" && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div className="glow-card w-full max-w-lg rounded-2xl bg-card p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-foreground">Create Referral</h3>
+                <Button variant="ghost" size="icon" onClick={() => setActiveModal(null)}>
+                  <X className="h-5 w-5" />
                 </Button>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Upload Lab Results Modal */}
-      {activeModal === "upload" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="glow-card w-full max-w-lg rounded-2xl bg-card p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-foreground">Upload Lab Results</h3>
-              <Button variant="ghost" size="icon" onClick={() => setActiveModal(null)}>
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="patient">Patient</Label>
-                <Select>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select patient" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {recentPatients.map((p) => (
-                      <SelectItem key={p.id} value={p.id.toString()}>
-                        {p.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="test-type">Test Type</Label>
-                <Select>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select test type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="blood">Blood Test</SelectItem>
-                    <SelectItem value="urine">Urine Analysis</SelectItem>
-                    <SelectItem value="xray">X-Ray</SelectItem>
-                    <SelectItem value="mri">MRI Scan</SelectItem>
-                    <SelectItem value="ct">CT Scan</SelectItem>
-                    <SelectItem value="ecg">ECG</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Upload File</Label>
-                <div className="mt-1 flex h-32 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-secondary/30 transition-colors hover:border-primary/50">
-                  <FileUp className="h-8 w-8 text-muted-foreground" />
-                  <p className="mt-2 text-sm text-muted-foreground">Click to upload or drag and drop</p>
-                  <p className="text-xs text-muted-foreground">PDF, PNG, JPG up to 10MB</p>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="patient">Patient</Label>
+                  <Select>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select patient" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {recentPatients.map((p) => (
+                        <SelectItem key={p.id} value={p.id.toString()}>
+                          {p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="specialist">Refer To</Label>
+                  <Select>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select specialist" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cardio">Cardiologist</SelectItem>
+                      <SelectItem value="neuro">Neurologist</SelectItem>
+                      <SelectItem value="ortho">Orthopedist</SelectItem>
+                      <SelectItem value="derm">Dermatologist</SelectItem>
+                      <SelectItem value="ent">ENT Specialist</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="hospital">Hospital</Label>
+                  <Select>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select hospital" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="tikur">Tikur Anbessa Hospital</SelectItem>
+                      <SelectItem value="st-paul">St. Paul's Hospital</SelectItem>
+                      <SelectItem value="alert">ALERT Hospital</SelectItem>
+                      <SelectItem value="zewditu">Zewditu Memorial Hospital</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="reason">Reason for Referral</Label>
+                  <Textarea
+                    id="reason"
+                    placeholder="Describe the reason for this referral..."
+                    className="mt-1 min-h-24"
+                  />
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <Button variant="outline" className="flex-1 bg-transparent" onClick={() => setActiveModal(null)}>
+                    Cancel
+                  </Button>
+                  <Button className="flex-1 gap-2">
+                    <Send className="h-4 w-4" />
+                    Send Referral
+                  </Button>
                 </div>
               </div>
-              <div>
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea id="notes" placeholder="Add any notes about the results..." className="mt-1 min-h-20" />
+            </div>
+          </div>
+        )
+      }
+
+      {/* Upload Lab Results Modal */}
+      {
+        activeModal === "upload" && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div className="glow-card w-full max-w-lg rounded-2xl bg-card p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-foreground">Upload Lab Results</h3>
+                <Button variant="ghost" size="icon" onClick={() => setActiveModal(null)}>
+                  <X className="h-5 w-5" />
+                </Button>
               </div>
-              <div className="flex gap-3 pt-2">
-                <Button variant="outline" className="flex-1 bg-transparent" onClick={() => setActiveModal(null)}>
-                  Cancel
-                </Button>
-                <Button className="flex-1 gap-2">
-                  <Check className="h-4 w-4" />
-                  Upload Results
-                </Button>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="patient">Patient</Label>
+                  <Select>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select patient" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {recentPatients.map((p) => (
+                        <SelectItem key={p.id} value={p.id.toString()}>
+                          {p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="test-type">Test Type</Label>
+                  <Select>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select test type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="blood">Blood Test</SelectItem>
+                      <SelectItem value="urine">Urine Analysis</SelectItem>
+                      <SelectItem value="xray">X-Ray</SelectItem>
+                      <SelectItem value="mri">MRI Scan</SelectItem>
+                      <SelectItem value="ct">CT Scan</SelectItem>
+                      <SelectItem value="ecg">ECG</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Upload File</Label>
+                  <div className="mt-1 flex h-32 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-secondary/30 transition-colors hover:border-primary/50">
+                    <FileUp className="h-8 w-8 text-muted-foreground" />
+                    <p className="mt-2 text-sm text-muted-foreground">Click to upload or drag and drop</p>
+                    <p className="text-xs text-muted-foreground">PDF, PNG, JPG up to 10MB</p>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="notes">Notes</Label>
+                  <Textarea id="notes" placeholder="Add any notes about the results..." className="mt-1 min-h-20" />
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <Button variant="outline" className="flex-1 bg-transparent" onClick={() => setActiveModal(null)}>
+                    Cancel
+                  </Button>
+                  <Button className="flex-1 gap-2">
+                    <Check className="h-4 w-4" />
+                    Upload Results
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   )
 }

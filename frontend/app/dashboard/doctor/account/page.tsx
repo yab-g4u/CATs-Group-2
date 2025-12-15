@@ -17,6 +17,8 @@ import {
   X,
   UserPlus,
   Wallet,
+  Calendar,
+  Send,
 } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
@@ -26,12 +28,14 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { useForm } from "react-hook-form"
-import { getUserProfile, getCurrentUser } from "@/lib/api"
+import { getUserProfile, getCurrentUser, updateUserProfile } from "@/lib/api"
 import { toast } from "sonner"
 
 const sidebarNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/doctor" },
   { icon: Users, label: "My Patients", href: "/dashboard/doctor/patients" },
+  { icon: Calendar, label: "Appointments", href: "/dashboard/doctor/appointments" },
+  { icon: Send, label: "Referrals", href: "/dashboard/doctor/referrals" },
   { icon: UserPlus, label: "Create Patient", href: "/dashboard/doctor/create-patient" },
   { icon: Wallet, label: "CarePoints Wallet", href: "/dashboard/doctor/wallet" },
   { icon: MessageSquare, label: "Chatbot", href: "/dashboard/doctor/chatbot" },
@@ -96,12 +100,12 @@ export default function DoctorAccountPage() {
         lastName,
         email: backendProfile.email || "",
         phone: backendProfile.phone || "",
-        specialization: "General Physician",
-        licenseNumber: "",
-        hospital: "D.I.N.A Hospital",
-        yearsExperience: "",
-        address: "Addis Ababa, Ethiopia",
-        about: "",
+        specialization: backendProfile.specialization || "General Physician",
+        licenseNumber: backendProfile.license_number || "",
+        hospital: backendProfile.hospital || "D.I.N.A Hospital",
+        yearsExperience: backendProfile.years_experience?.toString() || "",
+        address: backendProfile.address || "Addis Ababa, Ethiopia",
+        about: backendProfile.bio || "",
       }
       setProfileData(loadedData)
       reset(loadedData)
@@ -133,7 +137,19 @@ export default function DoctorAccountPage() {
   const onSubmit = async (data: ProfileFormData) => {
     try {
       setIsSaving(true)
-      // Save to local state (backend doesn't support full profile update yet)
+
+      await updateUserProfile({
+        full_name: `${data.firstName} ${data.lastName}`,
+        email: data.email,
+        phone: data.phone,
+        specialization: data.specialization,
+        license_number: data.licenseNumber,
+        hospital: data.hospital,
+        years_experience: parseInt(data.yearsExperience) || 0,
+        address: data.address,
+        bio: data.about
+      })
+
       setProfileData(data)
       setIsEditing(false)
       toast.success("Profile updated successfully!")

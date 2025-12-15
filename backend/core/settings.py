@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-lic8$-ezq=d%*b8$nitki(^lx*jg)2)_!=6u(8x1xzhyk7qqvg
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["cats-group-2-1.onrender.com"]
+ALLOWED_HOSTS = ["cats-group-2-1.onrender.com", "127.0.0.1", "localhost"]
 
 
 # Application definition

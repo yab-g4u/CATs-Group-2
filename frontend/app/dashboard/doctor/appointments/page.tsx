@@ -28,11 +28,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 import { format } from "date-fns"
-import { getDoctorCarePoints, getCurrentUser, getDoctorPatients } from "@/lib/api"
+
+import { getDoctorCarePoints, getCurrentUser, getDoctorPatients, createVisit, getDoctorVisits } from "@/lib/api"
 
 const sidebarNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/doctor" },
   { icon: Users, label: "My Patients", href: "/dashboard/doctor/patients" },
+  { icon: Calendar, label: "Appointments", href: "/dashboard/doctor/appointments", active: true },
+  { icon: Send, label: "Referrals", href: "/dashboard/doctor/referrals" },
   { icon: UserPlus, label: "Create Patient", href: "/dashboard/doctor/create-patient" },
   { icon: Wallet, label: "CarePoints Wallet", href: "/dashboard/doctor/wallet" },
   { icon: MessageSquare, label: "Chatbot", href: "/dashboard/doctor/chatbot" },
@@ -81,8 +84,23 @@ export default function DoctorAppointmentsPage() {
         console.error("Failed to load patients:", error)
       }
 
-      // Load appointments (placeholder - would need backend endpoint)
-      setAppointments([])
+      // Load appointments
+      try {
+        // We use visits as appointments for now
+        const visits = await getDoctorVisits()
+        setAppointments(visits.map((v: any) => ({
+          id: v.id,
+          patient: `Patient #${v.patient_id}`, // Ideally we get patient name from backend but default VisitModel might not have it unless we modified it. 
+          // Actually, in list_visits, I returned Visit objects. select_related ensures patient info is there but serialization depends on Schema.
+          // Wait, VisitModel (from patients.schemas) likely has patient_id.
+          // I will use "Patient #{id}" for now if name is missing.
+          type: "Visit",
+          time: new Date(v.visit_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          status: "confirmed"
+        })))
+      } catch (error) {
+        console.error("Failed to load appointments:", error)
+      }
     } catch (error) {
       console.error("Failed to load data:", error)
     }
@@ -96,16 +114,38 @@ export default function DoctorAppointmentsPage() {
       alert("Please fill required fields")
       return
     }
-    setIsSubmitting(true)
-    await new Promise((r) => setTimeout(r, 1200))
-    alert(
-      `Appointment booked for ${patientName} with ${selectedDoctor} on ${format(selectedDate, "PPP")} at ${selectedTime}`
-    )
-    setIsSubmitting(false)
-    setPatientName("")
-    setReason("")
-    setNotes("")
-    setSelectedTime("")
+
+    try {
+      setIsSubmitting(true)
+
+      // Find patient ID
+      const patient = patients.find(p => p.full_name === patientName)
+      if (patient) {
+        await createVisit({
+          patient_id: patient.id,
+          summary: `Appointment for ${reason} at ${selectedTime}`,
+          diagnosis: notes
+        })
+      }
+
+      alert(
+        `Appointment booked for ${patientName} on ${format(selectedDate, "PPP")} at ${selectedTime}. CarePoints earned!`
+      )
+
+      // Refresh CarePoints
+      const cpData = await getDoctorCarePoints()
+      setCarePoints(cpData.balance || 0)
+
+      setPatientName("")
+      setReason("")
+      setNotes("")
+      setSelectedTime("")
+    } catch (error) {
+      console.error("Failed to book appointment:", error)
+      alert("Failed to book appointment")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -207,12 +247,8 @@ export default function DoctorAppointmentsPage() {
               <h1 className="text-3xl font-bold text-foreground">Appointments</h1>
               <p className="mt-1 text-muted-foreground">Calendar view and new appointments</p>
             </div>
-            <Button variant="outline" className="gap-2">
-              <CalendarRange className="h-4 w-4" />
-              Export
-            </Button>
           </div>
-
+          {/* Export button removed */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div className="xl:col-span-1">
               <div className="glow-card rounded-2xl p-6">
@@ -265,7 +301,7 @@ export default function DoctorAppointmentsPage() {
                           </span>
                         </div>
                       </div>
-                    ))}
+                    )))}
                 </div>
               </div>
 

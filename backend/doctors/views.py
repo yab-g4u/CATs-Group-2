@@ -26,7 +26,7 @@ import io
 import json
 import secrets
 import string
-from typing import Optional
+from typing import Optional, List
 from datetime import date, timedelta
 
 router = Router(tags=["Doctor Views"])
@@ -64,12 +64,67 @@ def add_visit(request, payload: VisitCreateSchema):
         diagnosis=payload.diagnosis or "",
         cardano_hash=payload.cardano_hash or ""
     )
+    # Update doctor streak
+    doctor_profile = getattr(request.user, "doctor_profile", None)
+    if doctor_profile:
+        update_doctor_streak(doctor_profile)
+        
+        # Calculate and mint CarePoints (Activity reward = 5 points)
+        care_points_amount = 5
+        
+        # Update local balance
+        doctor_profile.care_points_balance += care_points_amount
+        doctor_profile.save()
+        
+        # Record transaction
+        tx = CarePointsTransaction.objects.create(
+            doctor=doctor_profile,
+            amount=care_points_amount,
+            description=f"Patient visit: {patient.health_id}",
+            transaction_type="patient_visit",
+        )
+        
+        # Mint on Cardano if address exists
+        if doctor_profile.cardano_address:
+            mint_result = mint_care_points(
+                address=doctor_profile.cardano_address,
+                amount=care_points_amount,
+            )
+            
+            if mint_result:
+                tx.cardano_tx_hash = mint_result.get("tx_hash")
+                tx.save()
+
     return {
         "id": visit.id,
         "summary": visit.summary,
         "diagnosis": visit.diagnosis or None,
         "cardano_hash": visit.cardano_hash or None
     }
+
+    return {
+        "id": visit.id,
+        "summary": visit.summary,
+        "diagnosis": visit.diagnosis or None,
+        "cardano_hash": visit.cardano_hash or None
+    }
+
+
+@router.get("/visits/", response=List[VisitModel], auth=AuthBearer())
+def list_visits(request):
+    """
+    List visits created by the doctor.
+    """
+    doctor_profile = getattr(request.user, "doctor_profile", None)
+    if not doctor_profile:
+        return []
+
+    visits = Visit.objects.filter(doctor=doctor_profile).select_related('patient', 'patient__user').order_by('-visit_date')
+    
+    # We need to map to VisitModel fields. 
+    # Attempting to return ORM objects directly if the schema matches model fields or aliases.
+    # Ninja handles ORM objects for Schema response if fields match.
+    return visits
 
 
 @router.post("/meds/", response=MedicationModel, auth=AuthBearer())
@@ -243,6 +298,18 @@ def create_patient(request, payload: CreatePatientSchema):
     # Calculate and mint CarePoints
     care_points_amount = calculate_care_points_reward(doctor_profile)
     
+    # Update doctor's CarePoints balance locally first
+    doctor_profile.care_points_balance += care_points_amount
+    doctor_profile.save()
+    
+    # Record transaction
+    tx = CarePointsTransaction.objects.create(
+        doctor=doctor_profile,
+        amount=care_points_amount,
+        description=f"Patient record creation: {health_id}",
+        transaction_type="patient_record",
+    )
+    
     if doctor_profile.cardano_address:
         mint_result = mint_care_points(
             address=doctor_profile.cardano_address,
@@ -251,18 +318,8 @@ def create_patient(request, payload: CreatePatientSchema):
         )
         
         if mint_result:
-            # Update doctor's CarePoints balance
-            doctor_profile.care_points_balance += care_points_amount
-            doctor_profile.save()
-            
-            # Record transaction
-            CarePointsTransaction.objects.create(
-                doctor=doctor_profile,
-                amount=care_points_amount,
-                description=f"Patient record creation: {health_id}",
-                transaction_type="patient_record",
-                cardano_tx_hash=mint_result.get("tx_hash"),
-            )
+            tx.cardano_tx_hash = mint_result.get("tx_hash")
+            tx.save()
     
     # Generate QR code with record hash
     qr_data = {
