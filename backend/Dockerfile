@@ -1,4 +1,4 @@
-# Backend Dockerfile for CATs Medical Records System
+# backend/Dockerfile
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -13,13 +13,13 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements
+# Copy requirements (now relative to backend/)
 COPY requirements.txt .
 
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copy Django project
+# Copy all backend code
 COPY . .
 
 RUN mkdir -p media/qrcodes media/lab_results
