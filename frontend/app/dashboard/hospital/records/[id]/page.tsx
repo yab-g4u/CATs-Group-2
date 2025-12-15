@@ -69,7 +69,7 @@ export default function PatientRecordDetailsPage() {
             <span className="text-sm font-bold text-primary-foreground">S</span>
           </div>
           <div>
-            <span className="font-bold text-foreground">The Spine</span>
+            <span className="font-bold text-foreground">D.I.N.A</span>
             <p className="text-xs text-muted-foreground">Hospital Portal</p>
           </div>
         </div>
@@ -81,11 +81,10 @@ export default function PatientRecordDetailsPage() {
                 <Link
                   key={item.label}
                   href={item.href}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                    item.active
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${item.active
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
+                    }`}
                 >
                   <Icon className="h-5 w-5" />
                   {item.label}

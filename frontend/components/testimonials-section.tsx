@@ -33,7 +33,7 @@ export function TestimonialsSection() {
             Early words, <span className="text-primary glow-text">strong promise</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            A project in motion—here&apos;s what early users notice as The Spine takes shape.
+            A project in motion—here&apos;s what early users notice as D.I.N.A takes shape.
           </p>
         </div>
 
@@ -43,7 +43,7 @@ export function TestimonialsSection() {
               <p className="text-foreground mb-6 italic">&ldquo;{testimonial.quote}&rdquo;</p>
               <div className="flex items-center gap-4">
                 <Image
-                  src={testimonial.image || "/placeholder.svg"}
+                  src={testimonial.image || "/placeholder.jpg"}
                   alt={testimonial.name}
                   width={48}
                   height={48}

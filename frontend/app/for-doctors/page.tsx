@@ -26,7 +26,7 @@ export default function ForDoctorsPage() {
                 Built for <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent glow-text">Doctors</span>
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
-                Save time, improve care, and access complete patient histories instantly with The Spine.
+                Save time, improve care, and access complete patient histories instantly with D.I.N.A.
               </p>
               <Link href="/dashboard/doctor/register">
                 <Button
@@ -49,7 +49,7 @@ export default function ForDoctorsPage() {
                 Why Doctors <span className="text-primary glow-text">Need It</span>
               </h2>
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                Every day, doctors face the challenge of incomplete patient information. The Spine solves this.
+                Every day, doctors face the challenge of incomplete patient information. D.I.N.A solves this.
               </p>
             </div>
 
@@ -285,7 +285,7 @@ export default function ForDoctorsPage() {
                   Ready to Transform Your <span className="text-primary glow-text">Practice</span>?
                 </h2>
                 <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
-                  Join doctors across Ethiopia who are already using The Spine to provide better care.
+                  Join doctors across Ethiopia who are already using D.I.N.A to provide better care.
                 </p>
                 <Link href="/dashboard/doctor/register">
                   <Button

@@ -6,7 +6,7 @@ export function ProductExplanationSection() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-            How <span className="text-primary glow-text">The Spine</span> Works
+            How <span className="text-primary glow-text">D.I.N.A</span> Works
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Three powerful technologies working together to transform healthcare delivery.

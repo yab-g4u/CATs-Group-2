@@ -22,7 +22,7 @@ export function HeroSection() {
           </h1>
 
           <p className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto text-pretty">
-            The Spine gives every patient a secure, portable digital identity backed by Cardano blockchain. One QR code.
+            D.I.N.A gives every patient a secure, portable digital identity backed by Cardano blockchain. One QR code.
             Complete medical history. Smarter referrals between clinics and hospitals.
           </p>
 

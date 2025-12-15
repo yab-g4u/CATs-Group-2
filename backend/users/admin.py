@@ -1,6 +1,19 @@
 from django.contrib import admin
-from .models import Doctor, Hospital, User
+from .models import User, OTPCode
+from doctors.models import DoctorProfile, Appointment, CarePointsTransaction
+from patients.models import PatientProfile, Visit, Medication, LabResult
 
-admin.site.register(Doctor)
-admin.site.register(Hospital)
+# Register User models
 admin.site.register(User)
+admin.site.register(OTPCode)
+
+# Register Doctor models
+admin.site.register(DoctorProfile)
+admin.site.register(Appointment)
+admin.site.register(CarePointsTransaction)
+
+# Register Patient models
+admin.site.register(PatientProfile)
+admin.site.register(Visit)
+admin.site.register(Medication)
+admin.site.register(LabResult)

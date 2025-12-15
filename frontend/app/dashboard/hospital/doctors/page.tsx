@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import {
   LayoutDashboard,
@@ -12,11 +12,13 @@ import {
   Plus,
   Trash2,
   UserPlus,
+  Loader2,
 } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { getHospitalDoctors, type Doctor } from "@/lib/api"
 
 const sidebarNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/hospital" },
@@ -26,48 +28,32 @@ const sidebarNavItems = [
   { icon: Settings, label: "Settings", href: "/dashboard/hospital/settings" },
 ]
 
-const mockDoctors = [
-  {
-    id: 1,
-    name: "Dr. Tegegne Abiyot",
-    email: "tegegne@hospital.com",
-    department: "Cardiology",
-    staffId: "DOC-001",
-    recordsCreated: 45,
-    carePoints: 1250,
-    avatar: "/Dr.tegegn abiyot.png",
-  },
-  {
-    id: 2,
-    name: "Dr. Saron Leulkal",
-    email: "saron@hospital.com",
-    department: "General Medicine",
-    staffId: "DOC-002",
-    recordsCreated: 32,
-    carePoints: 890,
-    avatar: "/Dr.saron leulkal.png",
-  },
-  {
-    id: 3,
-    name: "Dr. Rita Tilaye",
-    email: "rita@hospital.com",
-    department: "Pediatrics",
-    staffId: "DOC-003",
-    recordsCreated: 28,
-    carePoints: 720,
-    avatar: "/Dr.Rita tilaye.png",
-  },
-]
-
 export default function DoctorsPage() {
   const { theme, toggleTheme, mounted } = useTheme()
   const [searchQuery, setSearchQuery] = useState("")
+  const [isLoading, setIsLoading] = useState(true)
+  const [doctors, setDoctors] = useState<Doctor[]>([])
 
-  const filteredDoctors = mockDoctors.filter(
+  useEffect(() => {
+    loadDoctors()
+  }, [])
+
+  const loadDoctors = async () => {
+    try {
+      setIsLoading(true)
+      const doctorsData = await getHospitalDoctors()
+      setDoctors(doctorsData)
+    } catch (error) {
+      console.error("Failed to load doctors:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const filteredDoctors = doctors.filter(
     (doctor) =>
       doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doctor.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doctor.staffId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      doctor.specialization.toLowerCase().includes(searchQuery.toLowerCase()) ||
       doctor.email.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
@@ -82,7 +68,7 @@ export default function DoctorsPage() {
             <span className="text-sm font-bold text-primary-foreground">S</span>
           </div>
           <div>
-            <span className="font-bold text-foreground">The Spine</span>
+            <span className="font-bold text-foreground">D.I.N.A</span>
             <p className="text-xs text-muted-foreground">Hospital Portal</p>
           </div>
         </div>
@@ -142,32 +128,41 @@ export default function DoctorsPage() {
                 All Doctors ({filteredDoctors.length})
               </h2>
             </div>
-            <div className="space-y-4">
-              {filteredDoctors.map((doctor) => (
-                <div key={doctor.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={doctor.avatar} />
-                      <AvatarFallback>{doctor.name.split(" ").map((n) => n[0]).join("")}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-semibold text-foreground">{doctor.name}</p>
-                      <p className="text-sm text-muted-foreground">{doctor.email}</p>
-                      <p className="text-xs text-muted-foreground">{doctor.department} • {doctor.staffId}</p>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : filteredDoctors.length > 0 ? (
+              <div className="space-y-4">
+                {filteredDoctors.map((doctor) => (
+                  <div key={doctor.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-4">
+                      <Avatar className="h-12 w-12">
+                        <AvatarFallback>{doctor.name.split(" ").map((n) => n[0]).join("")}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-semibold text-foreground">{doctor.name}</p>
+                        <p className="text-sm text-muted-foreground">{doctor.email}</p>
+                        <p className="text-xs text-muted-foreground">{doctor.specialization} • {doctor.hospital}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-foreground">{doctor.records_created || 0} records</p>
+                        <p className="text-xs text-muted-foreground">{doctor.care_points_balance || 0} CarePoints</p>
+                      </div>
+                      <Button variant="outline" size="sm" className="text-red-400 hover:text-red-500 hover:bg-red-500/10">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-foreground">{doctor.recordsCreated} records</p>
-                      <p className="text-xs text-muted-foreground">{doctor.carePoints} CarePoints</p>
-                    </div>
-                    <Button variant="outline" size="sm" className="text-red-400 hover:text-red-500 hover:bg-red-500/10">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                {searchQuery ? "No doctors match your search." : "No doctors found."}
+              </p>
+            )}
           </div>
         </main>
       </div>

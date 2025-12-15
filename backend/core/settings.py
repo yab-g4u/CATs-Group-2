@@ -38,20 +38,15 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Third-party
-    'rest_framework',
-    'rest_framework_simplejwt',
+    'ninja_jwt',
     'corsheaders',
     'channels',
     # Local apps
     'users',
     'patients',
     'doctors',
-    'referrals',
-    'records',
-    'threads',
-    'blockchain',
-    'accesslogs',
-]
+    'hospitals',
+    'referrals']
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -64,11 +59,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-}
+
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -149,6 +140,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Media files (User uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

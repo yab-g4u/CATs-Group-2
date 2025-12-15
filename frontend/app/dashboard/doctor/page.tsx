@@ -37,90 +37,89 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { getDoctorPatients, getDoctorCarePoints } from "@/lib/api"
+import { useAuth } from "@/lib/auth-context"
 
 const sidebarNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/doctor", active: true },
   { icon: Users, label: "My Patients", href: "/dashboard/doctor/patients" },
   { icon: UserPlus, label: "Create Patient", href: "/dashboard/doctor/create-patient" },
-  { icon: FileText, label: "Create Record", href: "/dashboard/doctor/create-record" },
-  { icon: QrCode, label: "Generate QR", href: "/dashboard/doctor/generate-qr" },
   { icon: Wallet, label: "CarePoints Wallet", href: "/dashboard/doctor/wallet" },
-  { icon: User, label: "Profile", href: "/dashboard/doctor/account" },
+  { icon: MessageSquare, label: "Chatbot", href: "/dashboard/doctor/chatbot" },
 ]
 
-const sidebarBottomItems = [{ icon: User, label: "Account", href: "#" }]
-
-const recentPatients = [
-  {
-    id: 1,
-    name: "Abebe Bekele",
-    condition: "Hypertension",
-    lastVisit: "Today",
-    avatar: "/ethiopian-woman-portrait.jpg",
-  },
-  { id: 2, name: "Tigist Haile", condition: "Diabetes Type 2", lastVisit: "Yesterday", avatar: "" },
-  { id: 3, name: "Dawit Mengistu", condition: "Back Pain", lastVisit: "2 days ago", avatar: "" },
-  { id: 4, name: "Sara Tesfaye", condition: "Prenatal Care", lastVisit: "3 days ago", avatar: "" },
-]
-
-const appointments = [
-  { id: 1, patient: "Abebe Bekele", time: "09:00 AM", type: "Follow-up", status: "confirmed" },
-  { id: 2, patient: "Hana Girma", time: "10:30 AM", type: "New Patient", status: "pending" },
-  { id: 3, patient: "Yonas Tadesse", time: "11:45 AM", type: "Lab Review", status: "confirmed" },
-  { id: 4, patient: "Meron Assefa", time: "02:00 PM", type: "Consultation", status: "confirmed" },
-  { id: 5, patient: "Biniam Worku", time: "03:30 PM", type: "Follow-up", status: "pending" },
-]
-
-const notifications = [
-  { id: 1, title: "Lab result ready", detail: "CBC for Abebe Bekele is available", time: "5m ago" },
-  { id: 2, title: "New referral accepted", detail: "Cardiology accepted referral for Hana Girma", time: "18m ago" },
-  { id: 3, title: "Appointment update", detail: "Yonas Tadesse moved to 12:15 PM", time: "30m ago" },
-]
-
-const patientTimeline = [
-  { date: "Dec 5, 2025", event: "Blood Test Results", type: "lab", details: "Hemoglobin: 14.2 g/dL, WBC: 7,500" },
-  {
-    date: "Nov 28, 2025",
-    event: "Prescribed Medication",
-    type: "prescription",
-    details: "Metformin 500mg, twice daily",
-  },
-  { date: "Nov 20, 2025", event: "Diagnostic Visit", type: "visit", details: "Routine checkup, BP: 120/80" },
-  { date: "Nov 10, 2025", event: "Referral to Specialist", type: "referral", details: "Referred to Cardiologist" },
-  { date: "Oct 25, 2025", event: "Initial Consultation", type: "visit", details: "Patient presented with fatigue" },
-]
+const sidebarBottomItems = [{ icon: User, label: "Account", href: "/dashboard/doctor/account" }]
 
 export default function DoctorDashboard() {
   const { theme, toggleTheme, mounted } = useTheme()
+  const { user } = useAuth()
   const [activeModal, setActiveModal] = useState<string | null>(null)
-  const [selectedPatient, setSelectedPatient] = useState(recentPatients[0])
+  const [recentPatients, setRecentPatients] = useState<any[]>([])
+  const [selectedPatient, setSelectedPatient] = useState<any>(null)
   const [isScanning, setIsScanning] = useState(false)
   const [streakData, setStreakData] = useState({ currentStreak: 0, totalUploads: 0 })
   const [carePoints, setCarePoints] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
+  const [appointments, setAppointments] = useState<any[]>([])
+  const [patientTimeline, setPatientTimeline] = useState<any[]>([])
+  const [notifications, setNotifications] = useState<any[]>([])
+
+  // Doctor name from auth context
+  const doctorName = user?.full_name || "Doctor"
 
   useEffect(() => {
-    loadStreakData()
+    loadDashboardData()
   }, [])
 
-  const loadStreakData = async () => {
+  const loadDashboardData = async () => {
     try {
-      const doctorId = "doctor_1" // In production, get from auth context
-      const response = await fetch(`/api/doctor/streak?doctorId=${doctorId}`)
-      const data = await response.json()
-      if (data.success) {
+      setIsLoading(true)
+
+      // Load CarePoints and streak
+      try {
+        const cpData = await getDoctorCarePoints()
+        setCarePoints(cpData.balance || 0)
         setStreakData({
-          currentStreak: data.currentStreak || 0,
-          totalUploads: data.totalUploads || 0,
+          currentStreak: cpData.current_streak || 0,
+          totalUploads: 0, // Will be calculated from patients count
         })
-        // Calculate CarePoints (10 base + 2 per streak day)
-        const storedData = localStorage.getItem(`carepoints_${doctorId}`)
-        if (storedData) {
-          const cpData = JSON.parse(storedData)
-          setCarePoints(cpData.balance || 0)
-        }
+      } catch (error) {
+        console.error("Failed to load CarePoints:", error)
       }
+
+      // Load patients
+      try {
+        const patients = await getDoctorPatients()
+        setRecentPatients(patients.slice(0, 4).map((p: any) => ({
+          id: p.id,
+          name: p.full_name,
+          condition: "Patient",
+          lastVisit: p.created_at ? new Date(p.created_at).toLocaleDateString() : "N/A",
+          avatar: "",
+          health_id: p.health_id,
+        })))
+        setStreakData(prev => ({ ...prev, totalUploads: patients.length }))
+        if (patients.length > 0) {
+          setSelectedPatient({
+            id: patients[0].id,
+            name: patients[0].full_name,
+            condition: "Patient",
+            health_id: patients[0].health_id,
+          })
+        }
+      } catch (error) {
+        console.error("Failed to load patients:", error)
+      }
+
+      // Load appointments (placeholder - would need backend endpoint)
+      setAppointments([])
+
+      // Load patient timeline (placeholder - would need backend endpoint)
+      setPatientTimeline([])
     } catch (error) {
-      console.error("Failed to load streak data:", error)
+      console.error("Failed to load dashboard data:", error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -149,7 +148,7 @@ export default function DoctorDashboard() {
             <span className="text-sm font-bold text-primary-foreground">S</span>
           </div>
           <div>
-            <span className="font-bold text-foreground">The Spine</span>
+            <span className="font-bold text-foreground">D.I.N.A</span>
             <p className="text-xs text-muted-foreground">Doctor Portal</p>
           </div>
         </div>
@@ -158,12 +157,31 @@ export default function DoctorDashboard() {
         <div className="border-b border-border px-6 py-4">
           <div className="glow-card flex items-center gap-3 rounded-xl p-3">
             <Avatar className="h-10 w-10 border-2 border-primary/50">
-              <AvatarImage src="/ethiopian-male-doctor.jpg" />
+              <AvatarImage src="/placeholder.jpg" />
               <AvatarFallback>DR</AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-semibold text-foreground">Dr. Nik Friman</p>
+              <p className="font-semibold text-foreground">Dr. {doctorName}</p>
               <p className="text-xs text-muted-foreground">General Physician</p>
+            </div>
+          </div>
+        </div>
+
+        {/* CarePoints Display */}
+        <div className="border-b border-border px-6 py-4">
+          <div className="glow-card rounded-xl p-3 bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Coins className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="text-xs text-muted-foreground">CarePoints</p>
+                  <p className="text-lg font-bold text-foreground">{carePoints.toLocaleString()}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-muted-foreground">Streak</p>
+                <p className="text-sm font-semibold text-foreground">{streakData.currentStreak} days</p>
+              </div>
             </div>
           </div>
         </div>
@@ -175,11 +193,10 @@ export default function DoctorDashboard() {
               <li key={item.label}>
                 <Link
                   href={item.href}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                    item.active
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${item.active
                       ? "glow-card bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                  }`}
+                    }`}
                 >
                   <item.icon className="h-5 w-5" />
                   {item.label}
@@ -228,7 +245,7 @@ export default function DoctorDashboard() {
           <div className="mb-8 flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-foreground">
-                Good Morning, <span className="glow-text text-primary">Dr. Nik!</span>
+                Good Morning, <span className="glow-text text-primary">Dr. {doctorName}!</span>
               </h1>
               <p className="mt-1 text-muted-foreground">You have {appointments.length} appointments today</p>
             </div>
@@ -287,101 +304,112 @@ export default function DoctorDashboard() {
               <div id="patients" className="glow-card rounded-2xl p-5">
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="font-semibold text-foreground">Recent Patients</h3>
-                  <button className="text-sm text-primary hover:underline">View All</button>
+                  <Link href="/dashboard/doctor/patients" className="text-sm text-primary hover:underline">View All</Link>
                 </div>
                 <div className="space-y-3">
-                  {recentPatients.map((patient) => (
-                    <div
-                      key={patient.id}
-                      onClick={() => setSelectedPatient(patient)}
-                      className={`flex items-center justify-between rounded-xl border p-3 cursor-pointer transition-all ${
-                        selectedPatient.id === patient.id
-                          ? "border-primary/50 bg-primary/10"
-                          : "border-border bg-card hover:border-primary/20"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10 border border-border">
-                          <AvatarImage src={patient.avatar || "/placeholder.svg"} />
-                          <AvatarFallback>
-                            {patient.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="space-y-0.5">
-                          <Link
-                            href="#patient-history"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              setSelectedPatient(patient)
-                              document.getElementById("patient-history")?.scrollIntoView({ behavior: "smooth" })
-                            }}
-                            className="font-medium text-foreground hover:text-primary"
-                          >
-                            {patient.name}
-                          </Link>
-                          <p className="text-sm text-muted-foreground">{patient.condition}</p>
+                  {isLoading ? (
+                    <div className="text-center py-8 text-muted-foreground">Loading patients...</div>
+                  ) : recentPatients.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">No patients yet. Create your first patient!</div>
+                  ) : (
+                    recentPatients.map((patient) => (
+                      <div
+                        key={patient.id}
+                        onClick={() => setSelectedPatient(patient)}
+                        className={`flex items-center justify-between rounded-xl border p-3 cursor-pointer transition-all ${selectedPatient?.id === patient.id
+                            ? "border-primary/50 bg-primary/10"
+                            : "border-border bg-card hover:border-primary/20"
+                          }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-10 w-10 border border-border">
+                            <AvatarImage src={patient.avatar || "/placeholder.jpg"} />
+                            <AvatarFallback>
+                              {patient.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="space-y-0.5">
+                            <Link
+                              href="#patient-history"
+                              onClick={(e) => {
+                                e.preventDefault()
+                                setSelectedPatient(patient)
+                                document.getElementById("patient-history")?.scrollIntoView({ behavior: "smooth" })
+                              }}
+                              className="font-medium text-foreground hover:text-primary"
+                            >
+                              {patient.name}
+                            </Link>
+                            <p className="text-sm text-muted-foreground">{patient.condition}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-muted-foreground">{patient.lastVisit}</span>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg">
+                              <MessageSquare className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs text-muted-foreground">{patient.lastVisit}</span>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg">
-                            <MessageSquare className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
 
               {/* Patient Profile Timeline */}
-              <div id="patient-history" className="glow-card rounded-2xl p-5">
-                <div className="mb-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10 border-2 border-primary/30">
-                      <AvatarImage src={selectedPatient.avatar || "/placeholder.svg"} />
-                      <AvatarFallback>
-                        {selectedPatient.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="font-semibold text-foreground">{selectedPatient.name}</h3>
-                      <p className="text-sm text-muted-foreground">Medical Timeline</p>
+              {selectedPatient && (
+                <div id="patient-history" className="glow-card rounded-2xl p-5">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10 border-2 border-primary/30">
+                        <AvatarImage src={selectedPatient?.avatar || "/placeholder.jpg"} />
+                        <AvatarFallback>
+                          {selectedPatient.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h3 className="font-semibold text-foreground">{selectedPatient.name}</h3>
+                        <p className="text-sm text-muted-foreground">Medical Timeline</p>
+                      </div>
+                    </div>
+                    <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+                      <FileText className="h-4 w-4" />
+                      Full Record
+                    </Button>
+                  </div>
+                  <div className="relative pl-6">
+                    <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-accent to-transparent" />
+                    <div className="space-y-4">
+                      {patientTimeline.length > 0 ? (
+                        patientTimeline.map((item, index) => (
+                          <div key={index} className="relative">
+                            <div className="absolute -left-6 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                              {getTimelineIcon(item.type)}
+                            </div>
+                            <div className="rounded-xl border border-border bg-card/50 p-3 ml-2">
+                              <div className="flex items-center justify-between mb-1">
+                                <p className="font-medium text-foreground">{item.event}</p>
+                                <span className="text-xs text-muted-foreground">{item.date}</span>
+                              </div>
+                              <p className="text-sm text-muted-foreground">{item.details}</p>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">No timeline data available</div>
+                      )}
                     </div>
                   </div>
-                  <Button variant="outline" size="sm" className="gap-2 bg-transparent">
-                    <FileText className="h-4 w-4" />
-                    Full Record
-                  </Button>
                 </div>
-                <div className="relative pl-6">
-                  <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-accent to-transparent" />
-                  <div className="space-y-4">
-                    {patientTimeline.map((item, index) => (
-                      <div key={index} className="relative">
-                        <div className="absolute -left-6 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                          {getTimelineIcon(item.type)}
-                        </div>
-                        <div className="rounded-xl border border-border bg-card/50 p-3 ml-2">
-                          <div className="flex items-center justify-between mb-1">
-                            <p className="font-medium text-foreground">{item.event}</p>
-                            <span className="text-xs text-muted-foreground">{item.date}</span>
-                          </div>
-                          <p className="text-sm text-muted-foreground">{item.details}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Right Column - Notifications & Today's Appointments */}
@@ -408,34 +436,37 @@ export default function DoctorDashboard() {
               <div className="glow-card rounded-2xl p-5">
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="font-semibold text-foreground">Today's Appointments</h3>
-                  <span className="text-xs text-muted-foreground">Dec 6, 2025</span>
+                  <span className="text-xs text-muted-foreground">{new Date().toLocaleDateString()}</span>
                 </div>
                 <div className="space-y-3">
-                  {appointments.map((apt) => (
-                    <div
-                      key={apt.id}
-                      className="flex items-center justify-between rounded-xl border border-border bg-card/50 p-3 transition-all hover:border-primary/20"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 flex-col items-center justify-center rounded-lg bg-secondary">
-                          <Clock className="h-4 w-4 text-primary" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground">{apt.patient}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {apt.time} • {apt.type}
-                          </p>
-                        </div>
-                      </div>
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full ${
-                          apt.status === "confirmed" ? "bg-primary/20 text-primary" : "bg-accent/20 text-accent"
-                        }`}
+                  {appointments.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">No appointments scheduled</div>
+                  ) : (
+                    appointments.map((apt) => (
+                      <div
+                        key={apt.id}
+                        className="flex items-center justify-between rounded-xl border border-border bg-card/50 p-3 transition-all hover:border-primary/20"
                       >
-                        {apt.status}
-                      </span>
-                    </div>
-                  ))}
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 flex-col items-center justify-center rounded-lg bg-secondary">
+                            <Clock className="h-4 w-4 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground">{apt.patient}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {apt.time} • {apt.type}
+                            </p>
+                          </div>
+                        </div>
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full ${apt.status === "confirmed" ? "bg-primary/20 text-primary" : "bg-accent/20 text-accent"
+                            }`}
+                        >
+                          {apt.status}
+                        </span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 

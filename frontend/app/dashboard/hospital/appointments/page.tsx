@@ -68,7 +68,7 @@ export default function HospitalAppointmentsPage() {
             <span className="text-sm font-bold text-primary-foreground">S</span>
           </div>
           <div>
-            <span className="font-bold text-foreground">The Spine</span>
+            <span className="font-bold text-foreground">D.I.N.A</span>
             <p className="text-xs text-muted-foreground">Hospital Portal</p>
           </div>
         </div>
@@ -79,7 +79,7 @@ export default function HospitalAppointmentsPage() {
               <AvatarFallback>HS</AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-semibold text-foreground">The Spine Hospital</p>
+              <p className="font-semibold text-foreground">D.I.N.A Hospital</p>
               <p className="text-xs text-muted-foreground">Addis Ababa</p>
             </div>
           </div>

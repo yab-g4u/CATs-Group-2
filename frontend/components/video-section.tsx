@@ -12,7 +12,7 @@ export function VideoSection() {
             Our Story: <span className="text-primary glow-text">Problem & Solution</span>
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto px-4">
-            Watch interviews with doctors and patients sharing their experiences with medical record challenges and how The Spine provides a solution.
+            Watch interviews with doctors and patients sharing their experiences with medical record challenges and how D.I.N.A provides a solution.
           </p>
         </div>
 
@@ -20,7 +20,7 @@ export function VideoSection() {
           <div className="aspect-video relative bg-muted/30">
             <iframe
               src={embedUrl}
-              title="The Spine - Problem Statement and Interviews"
+              title="D.I.N.A - Problem Statement and Interviews"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
               className="absolute inset-0 w-full h-full"

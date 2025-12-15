@@ -14,6 +14,8 @@ import {
   Sun,
   Bot,
   User as UserIcon,
+  UserPlus,
+  Wallet,
 } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
@@ -23,13 +25,13 @@ import { Textarea } from "@/components/ui/textarea"
 
 const sidebarNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/doctor" },
-  { icon: Users, label: "Patients", href: "/dashboard/doctor/patients" },
-  { icon: Send, label: "Referrals", href: "/dashboard/doctor/referrals" },
-  { icon: Calendar, label: "Appointments", href: "/dashboard/doctor/appointments" },
+  { icon: Users, label: "My Patients", href: "/dashboard/doctor/patients" },
+  { icon: UserPlus, label: "Create Patient", href: "/dashboard/doctor/create-patient" },
+  { icon: Wallet, label: "CarePoints Wallet", href: "/dashboard/doctor/wallet" },
   { icon: MessageSquare, label: "Chatbot", href: "/dashboard/doctor/chatbot", active: true },
 ]
 
-const sidebarBottomItems = [{ icon: Users, label: "Account", href: "#" }]
+const sidebarBottomItems = [{ icon: Users, label: "Account", href: "/dashboard/doctor/account" }]
 
 type Message = {
   id: number
@@ -100,7 +102,7 @@ export default function DoctorChatbotPage() {
             <span className="text-sm font-bold text-primary-foreground">S</span>
           </div>
           <div>
-            <span className="font-bold text-foreground">The Spine</span>
+            <span className="font-bold text-foreground">D.I.N.A</span>
             <p className="text-xs text-muted-foreground">Doctor Portal</p>
           </div>
         </div>
@@ -108,7 +110,7 @@ export default function DoctorChatbotPage() {
         <div className="border-b border-border px-6 py-4">
           <div className="glow-card flex items-center gap-3 rounded-xl p-3">
             <Avatar className="h-10 w-10 border-2 border-primary/50">
-              <AvatarImage src="/ethiopian-male-doctor.jpg" />
+              <AvatarImage src="/placeholder.jpg" />
               <AvatarFallback>DR</AvatarFallback>
             </Avatar>
             <div>
@@ -124,11 +126,10 @@ export default function DoctorChatbotPage() {
               <li key={item.label}>
                 <Link
                   href={item.href}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                    item.active
-                      ? "glow-card bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                  }`}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${item.active
+                    ? "glow-card bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    }`}
                 >
                   <item.icon className="h-5 w-5" />
                   {item.label}
@@ -200,11 +201,10 @@ export default function DoctorChatbotPage() {
                     </Avatar>
                   )}
                   <div
-                    className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                      message.sender === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-foreground"
-                    }`}
+                    className={`max-w-[80%] rounded-2xl px-4 py-3 ${message.sender === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-foreground"
+                      }`}
                   >
                     <p className="text-sm leading-relaxed">{message.text}</p>
                     <p className="mt-1 text-xs opacity-70">
@@ -213,7 +213,7 @@ export default function DoctorChatbotPage() {
                   </div>
                   {message.sender === "user" && (
                     <Avatar className="h-8 w-8 border-2 border-primary/30">
-                      <AvatarImage src="/ethiopian-male-doctor.jpg" />
+                      <AvatarImage src="/placeholder.jpg" />
                       <AvatarFallback>
                         <UserIcon className="h-4 w-4" />
                       </AvatarFallback>

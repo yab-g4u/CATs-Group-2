@@ -27,7 +27,7 @@ export function FeaturesSection() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-            What The Spine <span className="text-primary glow-text">Does</span>
+            What D.I.N.A <span className="text-primary glow-text">Does</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Three powerful technologies working together to transform healthcare delivery in Africa.

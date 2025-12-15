@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import {
   LayoutDashboard,
@@ -11,10 +11,12 @@ import {
   Search,
   Eye,
   Shield,
+  Loader2,
 } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { getHospitalPatientRecords, type HospitalPatientRecord } from "@/lib/api"
 
 const sidebarNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/hospital" },
@@ -24,55 +26,34 @@ const sidebarNavItems = [
   { icon: Settings, label: "Settings", href: "/dashboard/hospital/settings" },
 ]
 
-const mockPatientRecords = [
-  {
-    id: 1,
-    patientRecordId: "SPN-0001",
-    patientName: "Abebe Bekele",
-    createdBy: "Dr. Tegegne Abiyot",
-    dateCreated: "2024-01-15",
-    diagnosisSummary: "Hypertension, Type 2 Diabetes",
-    cardanoHash: "0x1234...abcd",
-  },
-  {
-    id: 2,
-    patientRecordId: "SPN-0002",
-    patientName: "Tigist Haile",
-    createdBy: "Dr. Saron Leulkal",
-    dateCreated: "2024-01-14",
-    diagnosisSummary: "Upper respiratory infection",
-    cardanoHash: "0x5678...efgh",
-  },
-  {
-    id: 3,
-    patientRecordId: "SPN-0003",
-    patientName: "Dawit Mengistu",
-    createdBy: "Dr. Rita Tilaye",
-    dateCreated: "2024-01-13",
-    diagnosisSummary: "Prenatal care - 2nd trimester",
-    cardanoHash: "0x9abc...ijkl",
-  },
-  {
-    id: 4,
-    patientRecordId: "SPN-0004",
-    patientName: "Sara Tesfaye",
-    createdBy: "Dr. Tegegne Abiyot",
-    dateCreated: "2024-01-12",
-    diagnosisSummary: "Back pain, muscle strain",
-    cardanoHash: "0xdef0...mnop",
-  },
-]
-
 export default function PatientRecordsPage() {
   const { theme, toggleTheme, mounted } = useTheme()
   const [searchQuery, setSearchQuery] = useState("")
+  const [isLoading, setIsLoading] = useState(true)
+  const [patientRecords, setPatientRecords] = useState<HospitalPatientRecord[]>([])
 
-  const filteredRecords = mockPatientRecords.filter(
+  useEffect(() => {
+    loadRecords()
+  }, [])
+
+  const loadRecords = async () => {
+    try {
+      setIsLoading(true)
+      const recordsData = await getHospitalPatientRecords()
+      setPatientRecords(recordsData)
+    } catch (error) {
+      console.error("Failed to load patient records:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const filteredRecords = patientRecords.filter(
     (record) =>
-      record.patientRecordId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.createdBy.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.diagnosisSummary.toLowerCase().includes(searchQuery.toLowerCase())
+      record.health_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      record.patient_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      record.created_by_doctor.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (record.diagnosis || "").toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   if (!mounted) return null
@@ -86,7 +67,7 @@ export default function PatientRecordsPage() {
             <span className="text-sm font-bold text-primary-foreground">S</span>
           </div>
           <div>
-            <span className="font-bold text-foreground">The Spine</span>
+            <span className="font-bold text-foreground">D.I.N.A</span>
             <p className="text-xs text-muted-foreground">Hospital Portal</p>
           </div>
         </div>
@@ -140,34 +121,50 @@ export default function PatientRecordsPage() {
                 All Records ({filteredRecords.length})
               </h2>
             </div>
-            <div className="space-y-4">
-              {filteredRecords.map((record) => (
-                <div key={record.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <p className="font-semibold text-foreground">{record.patientName}</p>
-                      <span className="px-2 py-1 text-xs font-mono bg-primary/10 text-primary rounded">
-                        {record.patientRecordId}
-                      </span>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : filteredRecords.length > 0 ? (
+              <div className="space-y-4">
+                {filteredRecords.map((record) => (
+                  <div key={record.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <p className="font-semibold text-foreground">{record.patient_name}</p>
+                        <span className="px-2 py-1 text-xs font-mono bg-primary/10 text-primary rounded">
+                          {record.health_id}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Created by {record.created_by_doctor} {record.created_at && `on ${new Date(record.created_at).toLocaleDateString()}`}
+                      </p>
+                      {record.diagnosis && (
+                        <p className="text-sm text-foreground mt-1">{record.diagnosis}</p>
+                      )}
+                      {record.cardano_hash && (
+                        <div className="flex items-center gap-2 mt-2">
+                          <Shield className="h-3 w-3 text-green-400" />
+                          <span className="text-xs text-muted-foreground font-mono">
+                            {record.cardano_hash.length > 20 ? `${record.cardano_hash.substring(0, 20)}...` : record.cardano_hash}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      Created by {record.createdBy} on {new Date(record.dateCreated).toLocaleDateString()}
-                    </p>
-                    <p className="text-sm text-foreground mt-1">{record.diagnosisSummary}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <Shield className="h-3 w-3 text-green-400" />
-                      <span className="text-xs text-muted-foreground font-mono">{record.cardanoHash}</span>
-                    </div>
+                    <Link href={`/dashboard/hospital/records/${record.id}`}>
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <Eye className="h-4 w-4" />
+                        View Details
+                      </Button>
+                    </Link>
                   </div>
-                  <Link href={`/dashboard/hospital/records/${record.id}`}>
-                    <Button variant="outline" size="sm" className="gap-2">
-                      <Eye className="h-4 w-4" />
-                      View Details
-                    </Button>
-                  </Link>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                {searchQuery ? "No records match your search." : "No patient records found."}
+              </p>
+            )}
           </div>
         </main>
       </div>

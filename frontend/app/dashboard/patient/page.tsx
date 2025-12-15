@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import {
@@ -27,11 +27,24 @@ import {
   Copy,
   CheckCircle2,
   Shield,
+  Loader2,
 } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  getPatientProfile,
+  getPatientQRCode,
+  getPatientVisits,
+  getPatientMedications,
+  getPatientLabResults,
+  getCurrentUser,
+  type PatientProfile,
+  type Visit,
+  type Medication,
+  type LabResult,
+} from "@/lib/api"
 
 const sidebarNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/patient", active: true },
@@ -44,40 +57,67 @@ const sidebarBottomItems = [
   { icon: User, label: "Account", href: "/dashboard/patient/account" },
 ]
 
-const tasks = [
-  { id: 1, title: "Order drugs", date: "07.06.2020", completed: true },
-  { id: 2, title: "Start course", date: "10.06.2020", completed: true },
-  { id: 3, title: "Blood test", date: "09:00, 12.06.2020", completed: true },
-  { id: 4, title: "Diagnostic", date: "09:00, 12.06.2020", completed: true },
-  { id: 5, title: "Took tests", date: "13:30, 10.06.2020", completed: false },
-  { id: 6, title: "Consultation", date: "14:00, 10.06.2020", completed: false },
-  { id: 7, title: "Diagnostic", date: "07:00, 12.05.2020", completed: false },
-]
-
 export default function PatientDashboard() {
   const { theme, toggleTheme, mounted } = useTheme()
-  const [taskFilter, setTaskFilter] = useState<"week" | "month">("week")
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [copiedId, setCopiedId] = useState(false)
   const [copiedHash, setCopiedHash] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  
+  const [patientProfile, setPatientProfile] = useState<PatientProfile | null>(null)
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null)
+  const [visits, setVisits] = useState<Visit[]>([])
+  const [medications, setMedications] = useState<Medication[]>([])
+  const [labResults, setLabResults] = useState<LabResult[]>([])
+  const [userInfo, setUserInfo] = useState(getCurrentUser())
 
-  const completedTasks = tasks.filter((t) => t.completed).length
+  useEffect(() => {
+    loadPatientData()
+  }, [])
 
-  // Mock data - in real app, this comes from API
-  const patientId = "SPN-0001"
-  const recordHash = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+  const loadPatientData = async () => {
+    try {
+      setIsLoading(true)
+      const [profile, qr, visitsData, medicationsData, labResultsData] = await Promise.all([
+        getPatientProfile().catch(() => null),
+        getPatientQRCode().catch(() => ({ qr_code_url: null })),
+        getPatientVisits().catch(() => []),
+        getPatientMedications().catch(() => []),
+        getPatientLabResults().catch(() => []),
+      ])
+      
+      if (profile) setPatientProfile(profile)
+      if (qr) setQrCodeUrl(qr.qr_code_url)
+      setVisits(visitsData)
+      setMedications(medicationsData)
+      setLabResults(labResultsData)
+    } catch (error) {
+      console.error("Failed to load patient data:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleCopyId = () => {
-    navigator.clipboard.writeText(patientId)
-    setCopiedId(true)
-    setTimeout(() => setCopiedId(false), 2000)
+    if (patientProfile?.health_id) {
+      navigator.clipboard.writeText(patientProfile.health_id)
+      setCopiedId(true)
+      setTimeout(() => setCopiedId(false), 2000)
+    }
   }
 
   const handleCopyHash = () => {
-    navigator.clipboard.writeText(recordHash)
-    setCopiedHash(true)
-    setTimeout(() => setCopiedHash(false), 2000)
+    const latestVisit = visits.find(v => v.cardano_hash)
+    if (latestVisit?.cardano_hash) {
+      navigator.clipboard.writeText(latestVisit.cardano_hash)
+      setCopiedHash(true)
+      setTimeout(() => setCopiedHash(false), 2000)
+    }
   }
+
+  const latestVisit = visits[0]
+  const latestMedication = medications[0]
+  const latestLabResult = labResults[0]
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -100,14 +140,14 @@ export default function PatientDashboard() {
           <div className="w-8 h-8 sm:w-10 sm:h-10 relative flex-shrink-0">
             <Image
               src="/icon.png"
-              alt="The Spine Logo"
+              alt="D.I.N.A Logo"
               fill
               className="object-contain"
               priority
             />
           </div>
           <div className="min-w-0">
-            <span className="font-bold text-foreground text-sm sm:text-base">The Spine</span>
+            <span className="font-bold text-foreground text-sm sm:text-base">D.I.N.A</span>
             <p className="text-xs text-muted-foreground">we care about you</p>
           </div>
           <button
@@ -122,12 +162,18 @@ export default function PatientDashboard() {
         <div className="border-b border-border px-4 sm:px-6 py-4">
           <div className="glow-card flex items-center gap-3 rounded-xl p-3">
             <Avatar className="h-10 w-10 border-2 border-primary/50 flex-shrink-0">
-              <AvatarImage src="/ethiopian-woman-portrait.jpg" />
-              <AvatarFallback>SL</AvatarFallback>
+              <AvatarImage src={userInfo?.profile_picture || "/placeholder.jpg"} />
+              <AvatarFallback>
+                {userInfo?.full_name?.split(" ").map(n => n[0]).join("") || "P"}
+              </AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <p className="font-semibold text-foreground text-sm truncate">Sierra Lisbon</p>
-              <p className="text-xs text-muted-foreground truncate">s.ferguson@gmail.com</p>
+              <p className="font-semibold text-foreground text-sm truncate">
+                {userInfo?.full_name || "Patient"}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                {userInfo?.email || "No email"}
+              </p>
             </div>
           </div>
         </div>
@@ -213,7 +259,7 @@ export default function PatientDashboard() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-                  Hello, <span className="glow-text text-primary">Kate!</span>
+                  Hello, <span className="glow-text text-primary">{userInfo?.full_name?.split(" ")[0] || "Patient"}!</span>
                 </h1>
                 <p className="mt-1 text-sm sm:text-base text-muted-foreground">How are you feeling today?</p>
               </div>
@@ -234,7 +280,7 @@ export default function PatientDashboard() {
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                     <Avatar className="h-10 w-10 sm:h-12 sm:w-12 border-2 border-primary/30 flex-shrink-0">
-                      <AvatarImage src="/ethiopian-male-doctor.jpg" />
+                      <AvatarImage src="/placeholder.jpg" />
                       <AvatarFallback>NF</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
@@ -287,26 +333,46 @@ export default function PatientDashboard() {
                   </Button>
                 </Link>
               </div>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 sm:gap-4 p-3 rounded-lg bg-muted/30">
-                  <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
-                    <Heart className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground text-sm sm:text-base">Hypertension Diagnosis</p>
-                    <p className="text-xs sm:text-sm text-muted-foreground">January 15, 2024</p>
-                  </div>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
                 </div>
-                <div className="flex items-center gap-3 sm:gap-4 p-3 rounded-lg bg-muted/30">
-                  <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center flex-shrink-0">
-                    <Pill className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground text-sm sm:text-base">Prescription: Lisinopril</p>
-                    <p className="text-xs sm:text-sm text-muted-foreground">January 15, 2024</p>
-                  </div>
+              ) : visits.length > 0 || medications.length > 0 ? (
+                <div className="space-y-3">
+                  {latestVisit && (
+                    <div className="flex items-center gap-3 sm:gap-4 p-3 rounded-lg bg-muted/30">
+                      <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
+                        <Heart className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground text-sm sm:text-base">
+                          {latestVisit.diagnosis || latestVisit.summary}
+                        </p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
+                          {latestVisit.summary.substring(0, 50)}...
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {latestMedication && (
+                    <div className="flex items-center gap-3 sm:gap-4 p-3 rounded-lg bg-muted/30">
+                      <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center flex-shrink-0">
+                        <Pill className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground text-sm sm:text-base">
+                          Prescription: {latestMedication.drug_name}
+                        </p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
+                          {latestMedication.dosage} {latestMedication.duration ? `• ${latestMedication.duration}` : ""}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
+              ) : (
+                <p className="text-sm text-muted-foreground py-4">No medical history records yet.</p>
+              )}
             </div>
 
             {/* Past Tests Section */}
@@ -323,26 +389,31 @@ export default function PatientDashboard() {
                   </Button>
                 </Link>
               </div>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 sm:gap-4 p-3 rounded-lg bg-muted/30">
-                  <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-                    <FlaskConical className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground text-sm sm:text-base">Blood Test - CBC</p>
-                    <p className="text-xs sm:text-sm text-muted-foreground">December 10, 2023 • Results: Normal</p>
-                  </div>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
                 </div>
-                <div className="flex items-center gap-3 sm:gap-4 p-3 rounded-lg bg-muted/30">
-                  <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center flex-shrink-0">
-                    <FlaskConical className="h-4 w-4 sm:h-5 sm:w-5 text-green-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground text-sm sm:text-base">X-Ray - Chest</p>
-                    <p className="text-xs sm:text-sm text-muted-foreground">November 5, 2023 • Results: Clear</p>
-                  </div>
+              ) : labResults.length > 0 ? (
+                <div className="space-y-3">
+                  {labResults.slice(0, 2).map((lab) => (
+                    <div key={lab.id} className="flex items-center gap-3 sm:gap-4 p-3 rounded-lg bg-muted/30">
+                      <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                        <FlaskConical className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground text-sm sm:text-base">
+                          {lab.summary || "Lab Test"}
+                        </p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
+                          {new Date(lab.date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
+              ) : (
+                <p className="text-sm text-muted-foreground py-4">No lab results yet.</p>
+              )}
             </div>
           </div>
 
@@ -374,7 +445,7 @@ export default function PatientDashboard() {
                     </Button>
                   </div>
                   <code className="text-sm sm:text-base font-mono font-semibold text-foreground break-all">
-                    {patientId}
+                    {patientProfile?.health_id || "Loading..."}
                   </code>
                 </div>
                 <div className="p-3 rounded-lg bg-green-500/5 border border-green-500/20">
@@ -397,12 +468,14 @@ export default function PatientDashboard() {
                     </Button>
                   </div>
                   <code className="text-xs font-mono text-foreground break-all">
-                    {recordHash}
+                    {latestVisit?.cardano_hash || "No record hash available"}
                   </code>
-                  <p className="text-xs text-green-400 mt-2 flex items-center gap-1">
-                    <CheckCircle2 className="h-3 w-3" />
-                    Verified on Cardano Blockchain
-                  </p>
+                  {latestVisit?.cardano_hash && (
+                    <p className="text-xs text-green-400 mt-2 flex items-center gap-1">
+                      <CheckCircle2 className="h-3 w-3" />
+                      Verified on Cardano Blockchain
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -416,16 +489,48 @@ export default function PatientDashboard() {
                 </h3>
               </div>
               <div className="flex flex-col items-center">
-                <div className="w-full max-w-[200px] sm:w-48 aspect-square bg-background rounded-lg flex items-center justify-center border-2 border-dashed border-border mb-4">
-                  <QrCode className="w-24 h-24 sm:w-32 sm:h-32 text-muted-foreground" />
-                </div>
-                <p className="text-xs sm:text-sm text-muted-foreground text-center mb-4 px-2">
-                  Contains: Patient ID + Record Hash. Show to healthcare providers for instant access.
-                </p>
-                <Button variant="outline" className="w-full gap-2 text-sm sm:text-base">
-                  <Download className="h-3 w-3 sm:h-4 sm:w-4" />
-                  Download QR Code
-                </Button>
+                {qrCodeUrl ? (
+                  <>
+                    <div className="w-full max-w-[200px] sm:w-48 aspect-square bg-background rounded-lg flex items-center justify-center border-2 border-border mb-4 overflow-hidden">
+                      <Image
+                        src={qrCodeUrl}
+                        alt="Patient QR Code"
+                        width={192}
+                        height={192}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <p className="text-xs sm:text-sm text-muted-foreground text-center mb-4 px-2">
+                      Contains: Patient ID + Record Hash. Show to healthcare providers for instant access.
+                    </p>
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2 text-sm sm:text-base"
+                      onClick={() => {
+                        const link = document.createElement("a")
+                        link.href = qrCodeUrl
+                        link.download = "patient-qr-code.png"
+                        link.click()
+                      }}
+                    >
+                      <Download className="h-3 w-3 sm:h-4 sm:w-4" />
+                      Download QR Code
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-full max-w-[200px] sm:w-48 aspect-square bg-background rounded-lg flex items-center justify-center border-2 border-dashed border-border mb-4">
+                      {isLoading ? (
+                        <Loader2 className="w-12 h-12 text-muted-foreground animate-spin" />
+                      ) : (
+                        <QrCode className="w-24 h-24 sm:w-32 sm:h-32 text-muted-foreground" />
+                      )}
+                    </div>
+                    <p className="text-xs sm:text-sm text-muted-foreground text-center mb-4 px-2">
+                      {isLoading ? "Loading QR code..." : "No QR code available yet."}
+                    </p>
+                  </>
+                )}
               </div>
             </div>
 

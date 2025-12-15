@@ -6,11 +6,8 @@ import { useRouter } from "next/navigation"
 import {
   LayoutDashboard,
   Users,
-  Send,
-  Calendar,
   MessageSquare,
   User,
-  Search,
   Bell,
   Moon,
   Sun,
@@ -18,6 +15,8 @@ import {
   Save,
   ArrowLeft,
   UserPlus,
+  Coins,
+  Wallet,
 } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
@@ -27,25 +26,48 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { createPatient, getDoctorCarePoints } from "@/lib/api"
+import { useAuth } from "@/lib/auth-context"
+import Image from "next/image"
+import { useEffect } from "react"
 
 const sidebarNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/doctor" },
   { icon: Users, label: "My Patients", href: "/dashboard/doctor/patients" },
   { icon: UserPlus, label: "Create Patient", href: "/dashboard/doctor/create-patient", active: true },
-  { icon: QrCode, label: "Generate QR", href: "/dashboard/doctor/generate-qr" },
-  { icon: Users, label: "Records", href: "/dashboard/doctor/records" },
-  { icon: User, label: "Profile", href: "/dashboard/doctor/account" },
+  { icon: Wallet, label: "CarePoints Wallet", href: "/dashboard/doctor/wallet" },
+  { icon: MessageSquare, label: "Chatbot", href: "/dashboard/doctor/chatbot" },
 ]
 
 const sidebarBottomItems = [{ icon: User, label: "Account", href: "/dashboard/doctor/account" }]
 
 export default function CreatePatientPage() {
   const { theme, toggleTheme, mounted } = useTheme()
+  const { user } = useAuth()
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
-  const [generatedPatientId, setGeneratedPatientId] = useState("")
-  const [generatedQR, setGeneratedQR] = useState("")
+  const [generatedPatientId, setGeneratedPatientId] = useState<number | null>(null)
+  const [generatedHealthId, setGeneratedHealthId] = useState("")
+  const [generatedQRUrl, setGeneratedQRUrl] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [carePoints, setCarePoints] = useState(0)
+
+  // Doctor name from auth context
+  const doctorName = user?.full_name || "Doctor"
+
+  useEffect(() => {
+    loadDoctorData()
+  }, [])
+
+  const loadDoctorData = async () => {
+    try {
+      const cpData = await getDoctorCarePoints()
+      setCarePoints(cpData.balance || 0)
+    } catch (error) {
+      console.error("Failed to load doctor data:", error)
+    }
+  }
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -54,21 +76,35 @@ export default function CreatePatientPage() {
     gender: "",
     condition: "",
     notes: "",
+    emergencyContact: "",
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setError(null)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+    try {
+      const response = await createPatient({
+        full_name: formData.fullName,
+        age: formData.age ? parseInt(formData.age) : undefined,
+        date_of_birth: formData.dateOfBirth || undefined,
+        gender: formData.gender,
+        condition: formData.condition || undefined,
+        notes: formData.notes || undefined,
+        emergency_contact: formData.emergencyContact || undefined,
+      })
 
-    // Generate patient ID (in real app, this comes from backend)
-    const patientId = `PAT-${Date.now().toString().slice(-9)}`
-    setGeneratedPatientId(patientId)
-    setGeneratedQR(`https://thespine.app/patient-access?q=${patientId}`)
-    setShowSuccessModal(true)
-    setIsSubmitting(false)
+      setGeneratedPatientId(response.patient_id)
+      setGeneratedHealthId(response.health_id)
+      setGeneratedQRUrl(response.qr_code_url)
+      setShowSuccessModal(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create patient")
+      console.error("Error creating patient:", err)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleInputChange = (field: string, value: string) => {
@@ -87,7 +123,7 @@ export default function CreatePatientPage() {
             <span className="text-sm font-bold text-primary-foreground">S</span>
           </div>
           <div>
-            <span className="font-bold text-foreground">The Spine</span>
+            <span className="font-bold text-foreground">D.I.N.A</span>
             <p className="text-xs text-muted-foreground">Doctor Portal</p>
           </div>
         </div>
@@ -96,12 +132,27 @@ export default function CreatePatientPage() {
         <div className="border-b border-border px-6 py-4">
           <div className="glow-card flex items-center gap-3 rounded-xl p-3">
             <Avatar className="h-10 w-10 border-2 border-primary/50">
-              <AvatarImage src="/ethiopian-male-doctor.jpg" />
+              <AvatarImage src="/placeholder.jpg" />
               <AvatarFallback>DR</AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-semibold text-foreground">Dr. Nik Friman</p>
+              <p className="font-semibold text-foreground">Dr. {doctorName}</p>
               <p className="text-xs text-muted-foreground">General Physician</p>
+            </div>
+          </div>
+        </div>
+
+        {/* CarePoints Display */}
+        <div className="border-b border-border px-6 py-4">
+          <div className="glow-card rounded-xl p-3 bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Coins className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="text-xs text-muted-foreground">CarePoints</p>
+                  <p className="text-lg font-bold text-foreground">{carePoints.toLocaleString()}</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -116,11 +167,10 @@ export default function CreatePatientPage() {
                 <Link
                   key={item.label}
                   href={item.href}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                    isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${isActive
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
                 >
                   <Icon className="h-5 w-5" />
                   {item.label}
@@ -180,6 +230,11 @@ export default function CreatePatientPage() {
           </div>
 
           <div className="max-w-3xl">
+            {error && (
+              <div className="mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400">
+                {error}
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="glow-card rounded-2xl p-8 space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
@@ -273,6 +328,20 @@ export default function CreatePatientPage() {
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="emergencyContact" className="text-base">
+                  Emergency Contact (Optional)
+                </Label>
+                <Input
+                  id="emergencyContact"
+                  type="text"
+                  placeholder="e.g., +251 911 234 567"
+                  value={formData.emergencyContact}
+                  onChange={(e) => handleInputChange("emergencyContact", e.target.value)}
+                  className="h-11"
+                />
+              </div>
+
               <div className="flex items-center gap-4 pt-4">
                 <Button
                   type="submit"
@@ -316,12 +385,12 @@ export default function CreatePatientPage() {
               <Label className="text-sm text-muted-foreground mb-2 block">Patient ID</Label>
               <div className="flex items-center gap-2">
                 <code className="flex-1 px-3 py-2 bg-background rounded-lg text-lg font-mono font-semibold text-foreground">
-                  {generatedPatientId}
+                  {generatedHealthId || generatedPatientId}
                 </code>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => navigator.clipboard.writeText(generatedPatientId)}
+                  onClick={() => navigator.clipboard.writeText(generatedHealthId || String(generatedPatientId))}
                 >
                   Copy
                 </Button>
@@ -330,10 +399,24 @@ export default function CreatePatientPage() {
 
             <div className="glow-card rounded-xl p-4 bg-primary/5 text-center">
               <Label className="text-sm text-muted-foreground mb-2 block">QR Code</Label>
-              <div className="w-48 h-48 mx-auto bg-background rounded-lg flex items-center justify-center border-2 border-dashed border-border">
-                <QrCode className="w-32 h-32 text-muted-foreground" />
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">QR code will be generated here</p>
+              {generatedQRUrl ? (
+                <div className="w-48 h-48 mx-auto bg-background rounded-lg flex items-center justify-center border-2 border-border overflow-hidden">
+                  <Image
+                    src={generatedQRUrl}
+                    alt="Patient QR Code"
+                    width={192}
+                    height={192}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="w-48 h-48 mx-auto bg-background rounded-lg flex items-center justify-center border-2 border-dashed border-border">
+                  <QrCode className="w-32 h-32 text-muted-foreground" />
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground mt-2">
+                {generatedQRUrl ? "QR code generated successfully" : "QR code will be generated here"}
+              </p>
             </div>
 
             <div className="flex gap-2">
@@ -357,7 +440,12 @@ export default function CreatePatientPage() {
                     gender: "",
                     condition: "",
                     notes: "",
+                    emergencyContact: "",
                   })
+                  setGeneratedPatientId(null)
+                  setGeneratedHealthId("")
+                  setGeneratedQRUrl(null)
+                  setError(null)
                   setShowSuccessModal(false)
                 }}
               >

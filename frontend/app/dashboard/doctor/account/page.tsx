@@ -1,12 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import {
   LayoutDashboard,
   Users,
-  Send,
-  Calendar,
   MessageSquare,
   User,
   Search,
@@ -17,6 +15,8 @@ import {
   Edit,
   Save,
   X,
+  UserPlus,
+  Wallet,
 } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
@@ -26,12 +26,14 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { useForm } from "react-hook-form"
+import { getUserProfile, getCurrentUser } from "@/lib/api"
+import { toast } from "sonner"
 
 const sidebarNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/doctor" },
-  { icon: Users, label: "Patients", href: "/dashboard/doctor/patients" },
-  { icon: Send, label: "Referrals", href: "/dashboard/doctor/referrals" },
-  { icon: Calendar, label: "Appointments", href: "/dashboard/doctor/appointments" },
+  { icon: Users, label: "My Patients", href: "/dashboard/doctor/patients" },
+  { icon: UserPlus, label: "Create Patient", href: "/dashboard/doctor/create-patient" },
+  { icon: Wallet, label: "CarePoints Wallet", href: "/dashboard/doctor/wallet" },
   { icon: MessageSquare, label: "Chatbot", href: "/dashboard/doctor/chatbot" },
 ]
 
@@ -54,17 +56,19 @@ export default function DoctorAccountPage() {
   const { theme, toggleTheme, mounted } = useTheme()
   const [isFlipped, setIsFlipped] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
   const [profileData, setProfileData] = useState<ProfileFormData>({
-    firstName: "Nik",
-    lastName: "Friman",
-    email: "nik.friman@thespine.com",
-    phone: "+251 911 123 456",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
     specialization: "General Physician",
-    licenseNumber: "LIC-12345-ETH",
-    hospital: "The Spine Hospital",
-    yearsExperience: "12",
+    licenseNumber: "",
+    hospital: "D.I.N.A Hospital",
+    yearsExperience: "",
     address: "Addis Ababa, Ethiopia",
-    about: "Focused on preventive care, digital health, and patient education.",
+    about: "",
   })
 
   const { register, handleSubmit, reset } = useForm<ProfileFormData>({
@@ -73,9 +77,72 @@ export default function DoctorAccountPage() {
 
   const doctorId = "DOC-2024-001234"
 
-  const onSubmit = (data: ProfileFormData) => {
-    setProfileData(data)
-    setIsEditing(false)
+  // Load user profile on mount
+  useEffect(() => {
+    loadProfile()
+  }, [])
+
+  const loadProfile = async () => {
+    try {
+      setIsLoading(true)
+      // Try to get from backend first
+      const backendProfile = await getUserProfile()
+      const nameParts = (backendProfile.full_name || "").split(" ")
+      const firstName = nameParts[0] || ""
+      const lastName = nameParts.slice(1).join(" ") || ""
+
+      const loadedData = {
+        firstName,
+        lastName,
+        email: backendProfile.email || "",
+        phone: backendProfile.phone || "",
+        specialization: "General Physician",
+        licenseNumber: "",
+        hospital: "D.I.N.A Hospital",
+        yearsExperience: "",
+        address: "Addis Ababa, Ethiopia",
+        about: "",
+      }
+      setProfileData(loadedData)
+      reset(loadedData)
+    } catch (error) {
+      // Fallback to local user data
+      const user = getCurrentUser()
+      if (user) {
+        const nameParts = (user.full_name || "").split(" ")
+        const loadedData = {
+          firstName: nameParts[0] || "Doctor",
+          lastName: nameParts.slice(1).join(" ") || "",
+          email: user.email || "",
+          phone: user.phone || "",
+          specialization: "General Physician",
+          licenseNumber: "",
+          hospital: "D.I.N.A Hospital",
+          yearsExperience: "",
+          address: "Addis Ababa, Ethiopia",
+          about: "",
+        }
+        setProfileData(loadedData)
+        reset(loadedData)
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const onSubmit = async (data: ProfileFormData) => {
+    try {
+      setIsSaving(true)
+      // Save to local state (backend doesn't support full profile update yet)
+      setProfileData(data)
+      setIsEditing(false)
+      toast.success("Profile updated successfully!")
+    } catch (error) {
+      toast.error("Failed to update profile")
+      console.error(error)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleEdit = () => {
@@ -88,6 +155,14 @@ export default function DoctorAccountPage() {
     setIsEditing(false)
   }
 
+  if (!mounted || isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
@@ -97,7 +172,7 @@ export default function DoctorAccountPage() {
             <span className="text-sm font-bold text-primary-foreground">S</span>
           </div>
           <div>
-            <span className="font-bold text-foreground">The Spine</span>
+            <span className="font-bold text-foreground">D.I.N.A</span>
             <p className="text-xs text-muted-foreground">Doctor Portal</p>
           </div>
         </div>
@@ -105,7 +180,7 @@ export default function DoctorAccountPage() {
         <div className="border-b border-border px-6 py-4">
           <div className="glow-card flex items-center gap-3 rounded-xl p-3">
             <Avatar className="h-10 w-10 border-2 border-primary/50">
-              <AvatarImage src="/ethiopian-male-doctor.jpg" />
+              <AvatarImage src="/placeholder.jpg" />
               <AvatarFallback>DR</AvatarFallback>
             </Avatar>
             <div>
@@ -121,11 +196,10 @@ export default function DoctorAccountPage() {
               <li key={item.label}>
                 <Link
                   href={item.href}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                    item.active
-                      ? "glow-card bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                  }`}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${'active' in item && item.active
+                    ? "glow-card bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    }`}
                 >
                   <item.icon className="h-5 w-5" />
                   {item.label}
@@ -141,11 +215,10 @@ export default function DoctorAccountPage() {
               <li key={item.label}>
                 <Link
                   href={item.href}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                    item.active
-                      ? "glow-card bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                  }`}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${item.active
+                    ? "glow-card bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    }`}
                 >
                   <item.icon className="h-5 w-5" />
                   {item.label}
@@ -212,7 +285,7 @@ export default function DoctorAccountPage() {
 
                         <div className="flex-1 flex flex-col items-center justify-center gap-4">
                           <Avatar className="h-24 w-24 border-4 border-primary/50">
-                            <AvatarImage src="/ethiopian-male-doctor.jpg" />
+                            <AvatarImage src="/placeholder.jpg" />
                             <AvatarFallback className="text-2xl">DR</AvatarFallback>
                           </Avatar>
                           <div className="text-center">

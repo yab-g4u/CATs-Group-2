@@ -14,6 +14,8 @@ import {
   Moon,
   Sun,
   Clock,
+  UserPlus,
+  Wallet,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,14 +25,13 @@ import { format } from "date-fns"
 
 const sidebarNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/doctor" },
-  { icon: Users, label: "Patients", href: "/dashboard/doctor/patients" },
-  { icon: Send, label: "Referrals", href: "/dashboard/doctor/referrals" },
-  { icon: Calendar, label: "Appointments", href: "/dashboard/doctor/appointments" },
+  { icon: Users, label: "My Patients", href: "/dashboard/doctor/patients" },
+  { icon: UserPlus, label: "Create Patient", href: "/dashboard/doctor/create-patient" },
+  { icon: Wallet, label: "CarePoints Wallet", href: "/dashboard/doctor/wallet" },
   { icon: MessageSquare, label: "Chatbot", href: "/dashboard/doctor/chatbot" },
-  { icon: Calendar, label: "Calendar", href: "/dashboard/doctor/calendar", active: true },
 ]
 
-const sidebarBottomItems = [{ icon: Users, label: "Account", href: "#" }]
+const sidebarBottomItems = [{ icon: Users, label: "Account", href: "/dashboard/doctor/account" }]
 
 const dayAppointments = [
   { id: 1, patient: "Abebe Bekele", time: "09:00", type: "Follow-up" },
@@ -52,14 +53,14 @@ export default function DoctorCalendarPage() {
             <span className="text-sm font-bold text-primary-foreground">S</span>
           </div>
           <div>
-            <span className="font-bold text-foreground">The Spine</span>
+            <span className="font-bold text-foreground">D.I.N.A</span>
             <p className="text-xs text-muted-foreground">Doctor Portal</p>
           </div>
         </div>
         <div className="border-b border-border px-6 py-4">
           <div className="glow-card flex items-center gap-3 rounded-xl p-3">
             <Avatar className="h-10 w-10 border-2 border-primary/50">
-              <AvatarImage src="/ethiopian-male-doctor.jpg" />
+              <AvatarImage src="/placeholder.jpg" />
               <AvatarFallback>DR</AvatarFallback>
             </Avatar>
             <div>
@@ -74,11 +75,10 @@ export default function DoctorCalendarPage() {
               <li key={item.label}>
                 <Link
                   href={item.href}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                    item.active
-                      ? "glow-card bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                  }`}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${item.active
+                    ? "glow-card bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    }`}
                 >
                   <item.icon className="h-5 w-5" />
                   {item.label}

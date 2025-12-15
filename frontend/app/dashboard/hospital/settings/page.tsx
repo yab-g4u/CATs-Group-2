@@ -46,7 +46,7 @@ export default function HospitalSettingsPage() {
             <span className="text-sm font-bold text-primary-foreground">S</span>
           </div>
           <div>
-            <span className="font-bold text-foreground">The Spine</span>
+            <span className="font-bold text-foreground">D.I.N.A</span>
             <p className="text-xs text-muted-foreground">Hospital Portal</p>
           </div>
         </div>

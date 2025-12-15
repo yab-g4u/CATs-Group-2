@@ -19,13 +19,13 @@ export function Navbar() {
             <div className="w-8 h-8 sm:w-10 sm:h-10 relative flex-shrink-0">
               <Image
                 src="/icon.png"
-                alt="The Spine Logo"
+                alt="D.I.N.A Logo"
                 fill
                 className="object-contain"
                 priority
               />
             </div>
-            <span className="text-lg sm:text-xl font-bold text-foreground glow-text">The Spine</span>
+            <span className="text-lg sm:text-xl font-bold text-foreground glow-text">D.I.N.A</span>
           </Link>
 
           <div className="hidden md:flex items-center gap-8">

@@ -108,7 +108,7 @@ export default function PatientChatPage() {
             <span className="text-sm font-bold text-primary-foreground">S</span>
           </div>
           <div>
-            <span className="font-bold text-foreground">The Spine</span>
+            <span className="font-bold text-foreground">D.I.N.A</span>
             <p className="text-xs text-muted-foreground">we care about you</p>
           </div>
         </div>
@@ -117,7 +117,7 @@ export default function PatientChatPage() {
         <div className="border-b border-border px-6 py-4">
           <div className="glow-card flex items-center gap-3 rounded-xl p-3">
             <Avatar className="h-10 w-10 border-2 border-primary/50">
-              <AvatarImage src="/ethiopian-woman-portrait.jpg" />
+              <AvatarImage src="/placeholder.jpg" />
               <AvatarFallback>SL</AvatarFallback>
             </Avatar>
             <div>
@@ -231,7 +231,7 @@ export default function PatientChatPage() {
                   </div>
                   {message.sender === "user" && (
                     <Avatar className="h-8 w-8 border-2 border-primary/30">
-                      <AvatarImage src="/ethiopian-woman-portrait.jpg" />
+                      <AvatarImage src="/placeholder.jpg" />
                       <AvatarFallback>
                         <UserIcon className="h-4 w-4" />
                       </AvatarFallback>

@@ -1,0 +1,50 @@
+# Django Core
+Django==5.2.8
+django-ninja==1.1.0
+
+# REST Framework
+djangorestframework==3.15.2
+djangorestframework-simplejwt==5.3.1
+
+# CORS
+django-cors-headers==4.4.0
+
+# WebSockets
+channels==4.1.0
+channels-redis==4.2.0
+
+# Database (SQLite is included, but for production use PostgreSQL)
+# psycopg2-binary==2.9.9  # Uncomment for PostgreSQL
+
+# Image Processing
+Pillow==10.4.0
+
+# QR Code Generation
+qrcode[pil]==7.4.2
+
+# HTTP Requests
+requests==2.32.3
+
+# Data Validation
+pydantic==2.9.2
+pydantic[email]==2.9.2
+
+# Environment Variables
+python-dotenv==1.0.1
+
+# Cardano Integration (optional - for direct blockchain interaction)
+# pycardano==0.11.0  # Uncomment if using pycardano directly
+
+# IPFS Integration (optional)
+# ipfshttpclient==0.8.0a2  # Uncomment if using IPFS directly
+
+# Production Server
+gunicorn==23.0.0
+
+# Development Tools (optional)
+# ipython==8.25.0
+# django-debug-toolbar==4.4.4
+
+
+
+

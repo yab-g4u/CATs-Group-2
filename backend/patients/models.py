@@ -14,6 +14,32 @@ class PatientProfile(models.Model):
     health_id = models.CharField(max_length=64, unique=True)
     qr_code = models.ImageField(upload_to=qr_path, null=True, blank=True)
     emergency_contact = models.CharField(max_length=255, blank=True, default="")
+    ipfs_hash = models.CharField(
+        max_length=128, 
+        blank=True, 
+        null=True,
+        help_text="IPFS hash of the medical record"
+    )
+    cardano_tx_hash = models.CharField(
+        max_length=128, 
+        blank=True, 
+        null=True,
+        help_text="Cardano transaction hash"
+    )
+    cardano_record_hash = models.CharField(
+        max_length=128, 
+        blank=True, 
+        null=True,
+        help_text="Hash of the medical record stored on Cardano"
+    )
+    created_by_doctor = models.ForeignKey(
+        "doctors.DoctorProfile",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_patients",
+        help_text="Doctor who created this patient profile"
+    )
 
     def __str__(self):
         return f"{self.user.full_name or self.user.username} ({self.health_id})"

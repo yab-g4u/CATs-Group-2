@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import {
   LayoutDashboard,
   Calendar,
@@ -17,6 +18,7 @@ import {
   Save,
   X,
   Camera,
+  Loader2,
 } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
@@ -26,6 +28,13 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useForm } from "react-hook-form"
+import {
+  getPatientProfile,
+  getPatientQRCode,
+  updatePatientProfile,
+  getCurrentUser,
+  type PatientProfile,
+} from "@/lib/api"
 
 const sidebarNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/patient" },
@@ -56,30 +65,71 @@ export default function PatientAccountPage() {
   const { theme, toggleTheme, mounted } = useTheme()
   const [isFlipped, setIsFlipped] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [patientProfile, setPatientProfile] = useState<PatientProfile | null>(null)
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null)
+  const [userInfo, setUserInfo] = useState(getCurrentUser())
+  
   const [profileData, setProfileData] = useState<ProfileFormData>({
-    firstName: "Sierra",
-    lastName: "Lisbon",
-    email: "s.ferguson@gmail.com",
-    phone: "+251 911 234 567",
-    dateOfBirth: "1990-05-15",
-    address: "Addis Ababa, Ethiopia",
-    emergencyContact: "John Lisbon",
-    emergencyPhone: "+251 911 234 568",
-    bloodType: "A+",
-    allergies: "Penicillin, Peanuts",
-    medicalConditions: "Hypertension",
+    firstName: userInfo?.full_name?.split(" ")[0] || "",
+    lastName: userInfo?.full_name?.split(" ").slice(1).join(" ") || "",
+    email: userInfo?.email || "",
+    phone: userInfo?.phone || "",
+    dateOfBirth: "",
+    address: "",
+    emergencyContact: "",
+    emergencyPhone: "",
+    bloodType: "",
+    allergies: "",
+    medicalConditions: "",
   })
 
   const { register, handleSubmit, reset } = useForm<ProfileFormData>({
     defaultValues: profileData,
   })
 
-  const patientId = "PAT-2024-001234"
-  const generatedId = patientId
+  useEffect(() => {
+    loadProfile()
+  }, [])
 
-  const onSubmit = (data: ProfileFormData) => {
-    setProfileData(data)
-    setIsEditing(false)
+  const loadProfile = async () => {
+    try {
+      setIsLoading(true)
+      const [profile, qr] = await Promise.all([
+        getPatientProfile().catch(() => null),
+        getPatientQRCode().catch(() => ({ qr_code_url: null })),
+      ])
+      
+      if (profile) {
+        setPatientProfile(profile)
+        setProfileData(prev => ({
+          ...prev,
+          emergencyContact: profile.emergency_contact || "",
+        }))
+      }
+      if (qr) setQrCodeUrl(qr.qr_code_url)
+    } catch (error) {
+      console.error("Failed to load profile:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const onSubmit = async (data: ProfileFormData) => {
+    try {
+      setIsSaving(true)
+      if (patientProfile) {
+        await updatePatientProfile(data.emergencyContact || "")
+        await loadProfile()
+      }
+      setIsEditing(false)
+    } catch (error) {
+      console.error("Failed to update profile:", error)
+      alert("Failed to update profile. Please try again.")
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleEdit = () => {
@@ -92,6 +142,8 @@ export default function PatientAccountPage() {
     setIsEditing(false)
   }
 
+  const patientId = patientProfile?.health_id || "Loading..."
+
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
@@ -102,7 +154,7 @@ export default function PatientAccountPage() {
             <span className="text-sm font-bold text-primary-foreground">S</span>
           </div>
           <div>
-            <span className="font-bold text-foreground">The Spine</span>
+            <span className="font-bold text-foreground">D.I.N.A</span>
             <p className="text-xs text-muted-foreground">we care about you</p>
           </div>
         </div>
@@ -111,12 +163,14 @@ export default function PatientAccountPage() {
         <div className="border-b border-border px-6 py-4">
           <div className="glow-card flex items-center gap-3 rounded-xl p-3">
             <Avatar className="h-10 w-10 border-2 border-primary/50">
-              <AvatarImage src="/ethiopian-woman-portrait.jpg" />
-              <AvatarFallback>SL</AvatarFallback>
+              <AvatarImage src={userInfo?.profile_picture || "/placeholder.jpg"} />
+              <AvatarFallback>
+                {userInfo?.full_name?.split(" ").map(n => n[0]).join("") || "P"}
+              </AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-semibold text-foreground">Sierra Lisbon</p>
-              <p className="text-xs text-muted-foreground">s.ferguson@gmail.com</p>
+              <p className="font-semibold text-foreground">{userInfo?.full_name || "Patient"}</p>
+              <p className="text-xs text-muted-foreground">{userInfo?.email || "No email"}</p>
             </div>
           </div>
         </div>
@@ -224,7 +278,7 @@ export default function PatientAccountPage() {
                         
                         <div className="flex-1 flex flex-col items-center justify-center gap-4">
                           <Avatar className="h-24 w-24 border-4 border-primary/50">
-                            <AvatarImage src="/ethiopian-woman-portrait.jpg" />
+                            <AvatarImage src="/placeholder.jpg" />
                             <AvatarFallback className="text-2xl">SL</AvatarFallback>
                           </Avatar>
                           
@@ -281,10 +335,28 @@ export default function PatientAccountPage() {
                         </div>
                         
                         <div className="flex-1 flex flex-col items-center justify-center">
-                          <div className="w-48 h-48 bg-white rounded-lg p-4 flex items-center justify-center border-2 border-border mb-4">
-                            <QrCode className="h-32 w-32 text-foreground" />
-                          </div>
-                          <p className="text-xs text-muted-foreground">QR Code Placeholder</p>
+                          {qrCodeUrl ? (
+                            <div className="w-48 h-48 bg-white rounded-lg p-4 flex items-center justify-center border-2 border-border mb-4 overflow-hidden">
+                              <Image
+                                src={qrCodeUrl}
+                                alt="Patient QR Code"
+                                width={192}
+                                height={192}
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-48 h-48 bg-white rounded-lg p-4 flex items-center justify-center border-2 border-border mb-4">
+                              {isLoading ? (
+                                <Loader2 className="h-16 w-16 text-muted-foreground animate-spin" />
+                              ) : (
+                                <QrCode className="h-32 w-32 text-foreground" />
+                              )}
+                            </div>
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            {qrCodeUrl ? "Your QR Code" : isLoading ? "Loading..." : "No QR Code Available"}
+                          </p>
                         </div>
                         
                         <div className="mt-auto text-center">
@@ -321,9 +393,18 @@ export default function PatientAccountPage() {
                         <X className="h-4 w-4" />
                         Cancel
                       </Button>
-                      <Button onClick={handleSubmit(onSubmit)} className="gap-2">
-                        <Save className="h-4 w-4" />
-                        Save Changes
+                      <Button onClick={handleSubmit(onSubmit)} className="gap-2" disabled={isSaving}>
+                        {isSaving ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="h-4 w-4" />
+                            Save Changes
+                          </>
+                        )}
                       </Button>
                     </div>
                   )}

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useTheme } from "@/components/theme-provider"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   LayoutDashboard,
   Users,
@@ -16,6 +16,9 @@ import {
   Clock,
   Stethoscope,
   CalendarRange,
+  Coins,
+  UserPlus,
+  Wallet,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -25,36 +28,65 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 import { format } from "date-fns"
+import { getDoctorCarePoints, getCurrentUser, getDoctorPatients } from "@/lib/api"
 
 const sidebarNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/doctor" },
-  { icon: Users, label: "Patients", href: "/dashboard/doctor/patients" },
-  { icon: Send, label: "Referrals", href: "/dashboard/doctor/referrals" },
-  { icon: Calendar, label: "Appointments", href: "/dashboard/doctor/appointments", active: true },
+  { icon: Users, label: "My Patients", href: "/dashboard/doctor/patients" },
+  { icon: UserPlus, label: "Create Patient", href: "/dashboard/doctor/create-patient" },
+  { icon: Wallet, label: "CarePoints Wallet", href: "/dashboard/doctor/wallet" },
   { icon: MessageSquare, label: "Chatbot", href: "/dashboard/doctor/chatbot" },
 ]
 
-const sidebarBottomItems = [{ icon: Users, label: "Account", href: "#" }]
-
-const appointments = [
-  { id: 1, patient: "Abebe Bekele", time: "09:00", type: "Follow-up", status: "confirmed" },
-  { id: 2, patient: "Hana Girma", time: "10:30", type: "New Patient", status: "pending" },
-  { id: 3, patient: "Yonas Tadesse", time: "11:45", type: "Lab Review", status: "confirmed" },
-  { id: 4, patient: "Meron Assefa", time: "14:00", type: "Consultation", status: "confirmed" },
-  { id: 5, patient: "Biniam Worku", time: "15:30", type: "Follow-up", status: "pending" },
-]
-
-const doctors = ["Dr. Nik Friman", "Dr. Sarah Johnson", "Dr. Michael Chen", "Dr. Aida Tesfaye"]
+const sidebarBottomItems = [{ icon: Users, label: "Account", href: "/dashboard/doctor/account" }]
 
 export default function DoctorAppointmentsPage() {
   const { theme, toggleTheme, mounted } = useTheme()
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
-  const [selectedDoctor, setSelectedDoctor] = useState(doctors[0])
   const [selectedTime, setSelectedTime] = useState("")
   const [notes, setNotes] = useState("")
   const [patientName, setPatientName] = useState("")
   const [reason, setReason] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [appointments, setAppointments] = useState<any[]>([])
+  const [patients, setPatients] = useState<any[]>([])
+  const [carePoints, setCarePoints] = useState(0)
+  const [doctorName, setDoctorName] = useState("Zahir")
+
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  const loadData = async () => {
+    try {
+      // Load doctor info
+      const user = getCurrentUser()
+      if (user) {
+        setDoctorName(user.full_name || "Zahir")
+      }
+
+      // Load CarePoints
+      try {
+        const cpData = await getDoctorCarePoints()
+        setCarePoints(cpData.balance || 0)
+      } catch (error) {
+        console.error("Failed to load CarePoints:", error)
+      }
+
+      // Load patients for dropdown
+      try {
+        const patientsData = await getDoctorPatients()
+        setPatients(patientsData)
+      } catch (error) {
+        console.error("Failed to load patients:", error)
+      }
+
+      // Load appointments (placeholder - would need backend endpoint)
+      setAppointments([])
+    } catch (error) {
+      console.error("Failed to load data:", error)
+    }
+  }
 
   const availableSlots = ["08:30", "09:00", "09:30", "10:30", "11:30", "14:00", "15:30", "16:00"]
 
@@ -85,19 +117,34 @@ export default function DoctorAppointmentsPage() {
             <span className="text-sm font-bold text-primary-foreground">S</span>
           </div>
           <div>
-            <span className="font-bold text-foreground">The Spine</span>
+            <span className="font-bold text-foreground">D.I.N.A</span>
             <p className="text-xs text-muted-foreground">Doctor Portal</p>
           </div>
         </div>
         <div className="border-b border-border px-6 py-4">
           <div className="glow-card flex items-center gap-3 rounded-xl p-3">
             <Avatar className="h-10 w-10 border-2 border-primary/50">
-              <AvatarImage src="/ethiopian-male-doctor.jpg" />
+              <AvatarImage src="/placeholder.jpg" />
               <AvatarFallback>DR</AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-semibold text-foreground">Dr. Nik Friman</p>
+              <p className="font-semibold text-foreground">Dr. {doctorName}</p>
               <p className="text-xs text-muted-foreground">General Physician</p>
+            </div>
+          </div>
+        </div>
+
+        {/* CarePoints Display */}
+        <div className="border-b border-border px-6 py-4">
+          <div className="glow-card rounded-xl p-3 bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Coins className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="text-xs text-muted-foreground">CarePoints</p>
+                  <p className="text-lg font-bold text-foreground">{carePoints.toLocaleString()}</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -107,11 +154,10 @@ export default function DoctorAppointmentsPage() {
               <li key={item.label}>
                 <Link
                   href={item.href}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                    item.active
-                      ? "glow-card bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                  }`}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${item.active
+                    ? "glow-card bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    }`}
                 >
                   <item.icon className="h-5 w-5" />
                   {item.label}
@@ -197,27 +243,29 @@ export default function DoctorAppointmentsPage() {
                   <h2 className="text-xl font-semibold text-foreground">Upcoming</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {appointments.map((apt) => (
-                    <div
-                      key={apt.id}
-                      className="rounded-xl border border-border bg-card/60 p-4 transition-all hover:border-primary/30"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-muted-foreground">{apt.type}</p>
-                          <p className="text-lg font-semibold text-foreground">{apt.patient}</p>
-                          <p className="text-xs text-muted-foreground">{apt.time}</p>
+                  {appointments.length === 0 ? (
+                    <div className="col-span-2 text-center py-8 text-muted-foreground">No appointments scheduled</div>
+                  ) : (
+                    appointments.map((apt) => (
+                      <div
+                        key={apt.id}
+                        className="rounded-xl border border-border bg-card/60 p-4 transition-all hover:border-primary/30"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-muted-foreground">{apt.type}</p>
+                            <p className="text-lg font-semibold text-foreground">{apt.patient}</p>
+                            <p className="text-xs text-muted-foreground">{apt.time}</p>
+                          </div>
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full ${apt.status === "confirmed" ? "bg-primary/15 text-primary" : "bg-amber-100 text-amber-700"
+                              }`}
+                          >
+                            {apt.status}
+                          </span>
                         </div>
-                        <span
-                          className={`text-xs px-2 py-1 rounded-full ${
-                            apt.status === "confirmed" ? "bg-primary/15 text-primary" : "bg-amber-100 text-amber-700"
-                          }`}
-                        >
-                          {apt.status}
-                        </span>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </div>
 
@@ -230,29 +278,21 @@ export default function DoctorAppointmentsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="patient">Patient *</Label>
-                      <Input
-                        id="patient"
-                        value={patientName}
-                        onChange={(e) => setPatientName(e.target.value)}
-                        placeholder="Patient name"
-                        className="bg-secondary/50"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="doctor">Doctor</Label>
-                      <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
-                        <SelectTrigger id="doctor" className="bg-secondary/50">
-                          <SelectValue placeholder="Select doctor" />
+                      <Select value={patientName} onValueChange={setPatientName}>
+                        <SelectTrigger id="patient" className="bg-secondary/50">
+                          <SelectValue placeholder="Select patient" />
                         </SelectTrigger>
                         <SelectContent>
-                          {doctors.map((d) => (
-                            <SelectItem key={d} value={d}>
-                              {d}
+                          {patients.map((p) => (
+                            <SelectItem key={p.id} value={p.full_name}>
+                              {p.full_name} ({p.health_id})
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                      {patients.length === 0 && (
+                        <p className="text-xs text-muted-foreground">No patients yet. Create a patient first.</p>
+                      )}
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

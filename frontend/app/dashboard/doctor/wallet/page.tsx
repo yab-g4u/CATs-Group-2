@@ -15,6 +15,7 @@ import {
   TrendingUp,
   History,
   ArrowRight,
+  MessageSquare,
 } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
@@ -25,11 +26,11 @@ const sidebarNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/doctor" },
   { icon: Users, label: "My Patients", href: "/dashboard/doctor/patients" },
   { icon: UserPlus, label: "Create Patient", href: "/dashboard/doctor/create-patient" },
-  { icon: FileText, label: "Create Record", href: "/dashboard/doctor/create-record" },
-  { icon: QrCode, label: "Generate QR", href: "/dashboard/doctor/generate-qr" },
   { icon: Wallet, label: "CarePoints Wallet", href: "/dashboard/doctor/wallet", active: true },
-  { icon: User, label: "Profile", href: "/dashboard/doctor/account" },
+  { icon: MessageSquare, label: "Chatbot", href: "/dashboard/doctor/chatbot" },
 ]
+
+const sidebarBottomItems = [{ icon: User, label: "Account", href: "/dashboard/doctor/account" }]
 
 interface CarePointsData {
   balance: number
@@ -124,7 +125,7 @@ export default function CarePointsWalletPage() {
             <span className="text-sm font-bold text-primary-foreground">S</span>
           </div>
           <div>
-            <span className="font-bold text-foreground">The Spine</span>
+            <span className="font-bold text-foreground">D.I.N.A</span>
             <p className="text-xs text-muted-foreground">Doctor Portal</p>
           </div>
         </div>
@@ -136,11 +137,10 @@ export default function CarePointsWalletPage() {
                 <Link
                   key={item.label}
                   href={item.href}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                    item.active
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${item.active
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
                 >
                   <Icon className="h-5 w-5" />
                   {item.label}

@@ -16,18 +16,30 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
 from ninja import NinjaAPI
 
 from users.views import router as auth_router
+from doctors.views import router as doctor_router
+from patients.views import router as patient_router
+from hospitals.views import router as hospital_router
 
 
 api = NinjaAPI(title="CATs Backend API")
 
 # Mount routers
 api.add_router("/auth", auth_router, tags=["auth"])
+api.add_router("/doctor", doctor_router, tags=["doctor"])
+api.add_router("/patient", patient_router, tags=["patient"])
+api.add_router("", hospital_router, tags=["hospital"])
 
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", api.urls),
 ]
+
+# Serve media files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

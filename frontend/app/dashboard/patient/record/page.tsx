@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import {
   LayoutDashboard,
@@ -15,97 +15,34 @@ import {
   Upload,
   Send,
   Stethoscope,
+  Loader2,
+  Pill,
+  FlaskConical,
 } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import {
+  getPatientVisits,
+  getPatientMedications,
+  getPatientLabResults,
+  getCurrentUser,
+  type Visit,
+  type Medication,
+  type LabResult,
+} from "@/lib/api"
 
 const sidebarNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard/patient" },
-  { icon: Calendar, label: "Appointment", href: "#" },
+  { icon: Calendar, label: "Appointment", href: "/dashboard/patient/appointment" },
   { icon: FileText, label: "Record", href: "/dashboard/patient/record", active: true },
-  { icon: MessageSquare, label: "Chat", href: "#" },
+  { icon: MessageSquare, label: "Chat", href: "/dashboard/patient/chat" },
 ]
 
 const sidebarBottomItems = [
   { icon: User, label: "Account", href: "/dashboard/patient/account" },
-]
-
-const medicalHistory = [
-  {
-    id: 1,
-    date: "2024-01-15",
-    type: "Consultation",
-    doctor: "Dr. Nik Friman",
-    diagnosis: "Hypertension - Controlled",
-    notes: "Blood pressure readings are within normal range. Continue current medication.",
-    medications: ["Lisinopril 10mg daily"],
-  },
-  {
-    id: 2,
-    date: "2023-12-10",
-    type: "Lab Test",
-    doctor: "Dr. Nik Friman",
-    diagnosis: "Routine Blood Work",
-    notes: "Complete blood count and lipid panel. All values within normal limits.",
-    medications: [],
-  },
-  {
-    id: 3,
-    date: "2023-11-05",
-    type: "Consultation",
-    doctor: "Dr. Nik Friman",
-    diagnosis: "Annual Checkup",
-    notes: "General health assessment. Patient reports feeling well. No concerns.",
-    medications: [],
-  },
-  {
-    id: 4,
-    date: "2023-09-20",
-    type: "Treatment",
-    doctor: "Dr. Nik Friman",
-    diagnosis: "Hypertension Management",
-    notes: "Started on Lisinopril for blood pressure control. Follow-up scheduled in 2 weeks.",
-    medications: ["Lisinopril 10mg daily"],
-  },
-  {
-    id: 5,
-    date: "2023-08-12",
-    type: "Diagnostic",
-    doctor: "Dr. Nik Friman",
-    diagnosis: "Hypertension - Initial Diagnosis",
-    notes: "Elevated blood pressure readings detected. Recommended lifestyle changes and medication.",
-    medications: [],
-  },
-]
-
-const referredDoctors = [
-  {
-    id: 1,
-    name: "Dr. Nik Friman",
-    specialty: "Therapist",
-    hospital: "The Spine Hospital",
-    email: "nik.friman@spine.com",
-    avatar: "/ethiopian-male-doctor.jpg",
-  },
-  {
-    id: 2,
-    name: "Dr. Sarah Johnson",
-    specialty: "Cardiologist",
-    hospital: "City Medical Center",
-    email: "sarah.johnson@citymed.com",
-    avatar: "",
-  },
-  {
-    id: 3,
-    name: "Dr. Michael Chen",
-    specialty: "Neurologist",
-    hospital: "Regional Hospital",
-    email: "michael.chen@regional.com",
-    avatar: "",
-  },
 ]
 
 export default function PatientRecordPage() {
@@ -113,24 +50,72 @@ export default function PatientRecordPage() {
   const [showShareDialog, setShowShareDialog] = useState(false)
   const [selectedDoctor, setSelectedDoctor] = useState<number | null>(null)
   const [isSharing, setIsSharing] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [visits, setVisits] = useState<Visit[]>([])
+  const [medications, setMedications] = useState<Medication[]>([])
+  const [labResults, setLabResults] = useState<LabResult[]>([])
+  const [userInfo] = useState(getCurrentUser())
+
+  useEffect(() => {
+    loadRecords()
+  }, [])
+
+  const loadRecords = async () => {
+    try {
+      setIsLoading(true)
+      const [visitsData, medicationsData, labResultsData] = await Promise.all([
+        getPatientVisits().catch(() => []),
+        getPatientMedications().catch(() => []),
+        getPatientLabResults().catch(() => []),
+      ])
+      setVisits(visitsData)
+      setMedications(medicationsData)
+      setLabResults(labResultsData)
+    } catch (error) {
+      console.error("Failed to load records:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Combine all records for display
+  const allRecords = [
+    ...visits.map(v => ({
+      id: v.id,
+      type: "Visit",
+      date: new Date().toISOString().split('T')[0], // You may want to add created_at to Visit model
+      diagnosis: v.diagnosis || v.summary,
+      notes: v.summary,
+      medications: [] as string[],
+      cardano_hash: v.cardano_hash,
+    })),
+    ...medications.map(m => ({
+      id: m.id,
+      type: "Medication",
+      date: new Date().toISOString().split('T')[0],
+      diagnosis: `${m.drug_name} - ${m.dosage}`,
+      notes: m.duration || "",
+      medications: [`${m.drug_name} ${m.dosage}${m.duration ? ` for ${m.duration}` : ""}`],
+      cardano_hash: null,
+    })),
+    ...labResults.map(l => ({
+      id: l.id,
+      type: "Lab Test",
+      date: l.date,
+      diagnosis: l.summary || "Lab Test",
+      notes: "",
+      medications: [] as string[],
+      cardano_hash: null,
+    })),
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
   const handleShare = () => {
     setShowShareDialog(true)
   }
 
   const handleSendToDoctor = async () => {
-    if (!selectedDoctor) return
-
-    setIsSharing(true)
-    // Simulate PDF generation and sending
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    
-    // In real implementation, this would:
-    // 1. Generate PDF from medical history
-    // 2. Create shareable link
-    // 3. Send link to selected doctor
-    
-    alert(`Medical records PDF link sent to ${referredDoctors.find(d => d.id === selectedDoctor)?.name}`)
+    // TODO: Implement doctor referral/sharing functionality
+    alert("Doctor sharing feature coming soon!")
     setIsSharing(false)
     setShowShareDialog(false)
     setSelectedDoctor(null)
@@ -146,7 +131,7 @@ export default function PatientRecordPage() {
             <span className="text-sm font-bold text-primary-foreground">S</span>
           </div>
           <div>
-            <span className="font-bold text-foreground">The Spine</span>
+            <span className="font-bold text-foreground">D.I.N.A</span>
             <p className="text-xs text-muted-foreground">we care about you</p>
           </div>
         </div>
@@ -155,12 +140,14 @@ export default function PatientRecordPage() {
         <div className="border-b border-border px-6 py-4">
           <div className="glow-card flex items-center gap-3 rounded-xl p-3">
             <Avatar className="h-10 w-10 border-2 border-primary/50">
-              <AvatarImage src="/ethiopian-woman-portrait.jpg" />
-              <AvatarFallback>SL</AvatarFallback>
+              <AvatarImage src={userInfo?.profile_picture || "/placeholder.jpg"} />
+              <AvatarFallback>
+                {userInfo?.full_name?.split(" ").map(n => n[0]).join("") || "P"}
+              </AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-semibold text-foreground">Sierra Lisbon</p>
-              <p className="text-xs text-muted-foreground">s.ferguson@gmail.com</p>
+              <p className="font-semibold text-foreground">{userInfo?.full_name || "Patient"}</p>
+              <p className="text-xs text-muted-foreground">{userInfo?.email || "No email"}</p>
             </div>
           </div>
         </div>
@@ -237,8 +224,13 @@ export default function PatientRecordPage() {
           </div>
 
           {/* Medical History List */}
-          <div className="space-y-4">
-            {medicalHistory.map((record) => (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : allRecords.length > 0 ? (
+            <div className="space-y-4">
+              {allRecords.map((record) => (
               <div
                 key={record.id}
                 className="glow-card rounded-xl border border-border bg-card p-6 transition-all hover:border-primary/20"
@@ -254,15 +246,19 @@ export default function PatientRecordPage() {
                           day: "numeric",
                         })}
                       </span>
+                      {record.cardano_hash && (
+                        <span className="text-xs text-green-400 flex items-center gap-1">
+                          <Stethoscope className="h-3 w-3" />
+                          Verified
+                        </span>
+                      )}
                     </div>
                     
                     <h3 className="mb-2 text-lg font-semibold text-foreground">{record.diagnosis}</h3>
                     
-                    <p className="mb-3 text-sm text-muted-foreground">
-                      <span className="font-medium">Doctor:</span> {record.doctor}
-                    </p>
-                    
-                    <p className="mb-3 text-sm text-foreground">{record.notes}</p>
+                    {record.notes && (
+                      <p className="mb-3 text-sm text-foreground">{record.notes}</p>
+                    )}
                     
                     {record.medications.length > 0 && (
                       <div className="mt-3">
@@ -277,10 +273,9 @@ export default function PatientRecordPage() {
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-
-          {medicalHistory.length === 0 && (
+              ))}
+            </div>
+          ) : (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <FileText className="mb-4 h-12 w-12 text-muted-foreground" />
               <p className="text-muted-foreground">No medical history records found</p>
@@ -300,7 +295,10 @@ export default function PatientRecordPage() {
           </DialogHeader>
           
           <div className="mt-4 space-y-3 max-h-[400px] overflow-y-auto">
-            {referredDoctors.map((doctor) => (
+            <p className="text-sm text-muted-foreground">
+              Doctor referral feature coming soon. For now, you can share your records manually.
+            </p>
+            {/* {referredDoctors.map((doctor) => (
               <div
                 key={doctor.id}
                 onClick={() => setSelectedDoctor(doctor.id)}
@@ -330,7 +328,7 @@ export default function PatientRecordPage() {
                   </div>
                 )}
               </div>
-            ))}
+            ))} */}
           </div>
 
           <div className="mt-6 flex justify-end gap-3">

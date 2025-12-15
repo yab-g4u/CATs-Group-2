@@ -8,9 +8,11 @@ class SignupSchema(BaseModel):
     national_id: Optional[str] = None
     email: Optional[EmailStr] = None
     password: str
+    role: Optional[str] = "patient"
 
 
 class LoginSchema(BaseModel):
+    email: Optional[EmailStr] = None
     phone: Optional[str] = None
     national_id: Optional[str] = None
     password: str

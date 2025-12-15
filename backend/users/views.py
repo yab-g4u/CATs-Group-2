@@ -1,33 +1,19 @@
-import random
-from datetime import timedelta
 from django.utils import timezone
-from django.core.files.base import ContentFile
-from django.core.files.storage import default_storage
-from django.http import JsonResponse
 from django.contrib.auth import get_user_model
 from ninja import Router, Form, File
 from ninja.files import UploadedFile
 from ninja_jwt.tokens import RefreshToken
-from .utils import send_otp_email
 from .auth import AuthBearer
-from .models import OTPCode
-from .schemas import ( OTPVerifySchema,
+from .schemas import (
     SignupSchema, LoginSchema,
     BaseResponse, AuthSuccessResponse,
     UserProfileUpdateSchema, TokenSchema
 )
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 
 User = get_user_model()
 router = Router(tags=["Authentication & Profiles"])
-
-
-
-def generate_otp_code():
-    return str(random.randint(100000, 999999))
-
-
-def get_identifier(data):
-    return data.phone or data.national_id or data.email
 
 
 def issue_tokens(user):
@@ -35,27 +21,42 @@ def issue_tokens(user):
     access = refresh.access_token
     return str(access), str(refresh)
 
-@router.post("/signup/", response={200: dict, 400: dict})
+
+@router.post("/signup/", response={200: AuthSuccessResponse, 400: dict})
 def signup(
     request,
     payload: SignupSchema = Form(...),
     profile_picture: UploadedFile = File(None),
 ):
     # 1. Check existing user
-    if User.objects.filter(username=payload.email).exists():
+    if payload.email and User.objects.filter(email=payload.email).exists():
         return 400, {"error": "User with this email already exists"}
 
-    # 2. Create user
-    user = User.objects.create(
-        username=payload.email,  # username = email
-        email=payload.email,
-        full_name=payload.full_name,
-        phone=payload.phone,
-        national_id=payload.national_id,
-        role="patient",
-    )
+    # 2. Prepare username (fallback to phone or random if needed, but email is preferred)
+    username = payload.email
+    if not username:
+        username = payload.phone
+    if not username:
+        return 400, {"error": "Email or Phone is required"}
 
-    # 3. Save profile picture
+    # 3. Create user using create_user to hash password
+    try:
+        user = User.objects.create_user(
+            username=username,
+            email=payload.email,
+            password=payload.password,
+            full_name=payload.full_name,
+            phone=payload.phone,
+            national_id=payload.national_id,
+            role=payload.role or "patient",
+        )
+    except Exception as e:
+        # Handle duplicate username or other db errors
+        if "unique constraint" in str(e).lower():
+             return 400, {"error": "User already exists"}
+        return 400, {"error": str(e)}
+
+    # 4. Save profile picture
     if profile_picture:
         file_ext = profile_picture.name.split('.')[-1]
         file_path = f"profile_pictures/{user.username}.{file_ext}"
@@ -63,131 +64,46 @@ def signup(
         user.profile_picture = file_path
         user.save()
 
-    # 4. ALWAYS issue OTP
-    otp = generate_otp_code()
-    expires = timezone.now() + timedelta(minutes=15)
+    # 5. Issue tokens immediately (No OTP)
+    access, refresh = issue_tokens(user)
 
-    OTPCode.objects.create(
-        phone=user.phone,
-        national_id=user.national_id,
-        email=user.email,
-        code=otp,
-        expires_at=expires,
-    )
-
-    # 5. SEND OTP EMAIL
-    if user.email:
-        send_otp_email(user.email, otp)
-
-    print("DEBUG SIGNUP OTP:", otp)
-
-    return {"message": "Signup successful. OTP sent for verification."}
+    return 200, {
+        "success": True,
+        "message": "Signup successful",
+        "access": access,
+        "refresh": refresh
+    }
 
 
-@router.post("/login/", response={200: dict, 401: dict})
+@router.post("/login/", response={200: AuthSuccessResponse, 401: dict})
 def login(request, payload: LoginSchema):
 
-    # Lookup by phone OR national_id OR email/username
+    # Lookup user
     user = None
-
-    if payload.phone:
+    if payload.email:
+        user = User.objects.filter(email=payload.email).first()
+    elif payload.phone:
         user = User.objects.filter(phone=payload.phone).first()
-
     elif payload.national_id:
         user = User.objects.filter(national_id=payload.national_id).first()
-
-    else:
-        # fallback: login using email or username
-        user = User.objects.filter(username=payload.phone).first()
-
+    
     # User not found
     if not user:
-        return 401, {"error": "User not found"}
+        return 401, {"error": "Invalid credentials"}
 
     # Password check
     if not user.check_password(payload.password):
-        return 401, {"error": "Invalid password"}
+        return 401, {"error": "Invalid credentials"}
     
-    """
-    otp = generate_otp_code()
-    expires = timezone.now() + timedelta(minutes=15)
-
-    OTPCode.objects.create(
-        phone=user.phone,
-        national_id=user.national_id,
-        email=user.email,
-        code=otp,
-        expires_at=expires,
-    )
-
-    if user.email:
-        send_otp_email(user.email, otp)
-
-    print("DEBUG LOGIN OTP:", otp)
-
-    return {"message": "OTP sent for login verification."}
-    """
-
-    # TEMPORARY (OTP disabled)
-    return {"message": "Login request OK (OTP disabled)"}
-
-
-@router.post("/auth/otp/verify", response=AuthSuccessResponse)
-def otp_verify(request, data: OTPVerifySchema):
-
-    identifier = get_identifier(data)
-    if not identifier:
-        return AuthSuccessResponse(success=False, message="Identifier missing")
-
-    otp_qs = OTPCode.objects.filter(code=data.code, used=False)
-
-    if data.phone:
-        otp_qs = otp_qs.filter(phone=data.phone)
-    elif data.national_id:
-        otp_qs = otp_qs.filter(national_id=data.national_id)
-    else:
-        otp_qs = otp_qs.filter(email=data.email)
-
-    otp = otp_qs.order_by("-created_at").first()
-
-    if not otp or not otp.is_valid():
-        return AuthSuccessResponse(success=False, message="Invalid/Expired OTP")
-
-    # Mark OTP as used
-    otp.used = True
-    otp.save()
-
-    # Get user
-    user = User.objects.filter(
-        phone=otp.phone,
-        national_id=otp.national_id,
-        email=otp.email,
-    ).first()
-
-    if not user:
-        return AuthSuccessResponse(success=False, message="User not found")
-
-    # Issue cookies
+    # Issue tokens (No OTP)
     access, refresh = issue_tokens(user)
-
-    response = JsonResponse({
+    
+    return 200, {
         "success": True,
-        "message": "OTP Verified",
+        "message": "Login successful",
         "access": access,
-        "refresh": refresh,
-    })
-
-    response.set_cookie(
-        "access_token", access,
-        httponly=False, secure=False, samesite="None", max_age=3600
-    )
-    response.set_cookie(
-        "refresh_token", refresh,
-        httponly=False, secure=False, samesite="None",
-        max_age=7 * 24 * 3600
-    )
-
-    return response
+        "refresh": refresh
+    }
 
 
 @router.post("/logout/", auth=AuthBearer(), response={200: dict})
@@ -203,7 +119,12 @@ def logout(request, token_data: TokenSchema):
 
 @router.post("/refresh-token/", response={200: dict, 401: dict})
 async def refresh_token(request):
-    body = await request.json()
+    import json
+    try:
+        body = json.loads(request.body)
+    except:
+        body = {}
+        
     refresh_token = body.get("refresh")
 
     if not refresh_token:
@@ -211,6 +132,7 @@ async def refresh_token(request):
 
     try:
         token = RefreshToken(refresh_token)
+        # Verify user exists
         user = User.objects.get(id=token["user_id"])
         new_access = str(token.access_token)
 
@@ -218,7 +140,6 @@ async def refresh_token(request):
 
     except Exception as e:
         return 401, {"error": "Invalid refresh token", "detail": str(e)}
-
 
 
 @router.get("/profile/", auth=AuthBearer(), response=dict)
@@ -246,6 +167,8 @@ def update_profile(request, data: UserProfileUpdateSchema):
         user.language = data.language
     if data.elder_mode is not None:
         user.elder_mode = data.elder_mode
+    if data.emergency_contact is not None:
+        user.emergency_contact = data.emergency_contact
 
     user.save()
     return BaseResponse(success=True, message="Profile updated successfully")

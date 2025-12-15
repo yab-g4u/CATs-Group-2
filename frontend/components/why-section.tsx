@@ -7,7 +7,7 @@ export function WhySection() {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6">
-              Why <span className="text-primary glow-text">The Spine</span> Matters
+              Why <span className="text-primary glow-text">D.I.N.A</span> Matters
             </h2>
             <p className="text-muted-foreground text-lg mb-8">
               Patients in Ethiopia often carry their own medical history between clinics—in paper folders or their
@@ -15,7 +15,7 @@ export function WhySection() {
               data.
             </p>
             <p className="text-muted-foreground text-lg">
-              The Spine reimagines patient referrals as a secure digital backbone. With a QR code, patients become
+              D.I.N.A reimagines patient referrals as a secure digital backbone. With a QR code, patients become
               empowered data carriers. Doctors get the complete picture instantly. Health systems become smarter and
               more efficient.
             </p>

@@ -13,7 +13,7 @@ export function CTASection() {
             </h2>
             <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
               Join healthcare providers across Ethiopia in building a smarter, more connected healthcare system. Start
-              your journey with The Spine today.
+              your journey with D.I.N.A today.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button

@@ -82,7 +82,7 @@ export default function ForHospitalsPage() {
                   Hospitals bear the financial burden of duplicate procedures and lost efficiency.
                 </p>
                 <p className="text-muted-foreground text-lg">
-                  This is exactly why The Spine exists—to ensure that no patient&apos;s medical history is ever lost again. 
+                  This is exactly why D.I.N.A exists—to ensure that no patient&apos;s medical history is ever lost again. 
                   With blockchain-backed records, every test, every diagnosis, every piece of medical information is securely 
                   stored and instantly accessible, protecting both patients and hospitals.
                 </p>
@@ -152,7 +152,7 @@ export default function ForHospitalsPage() {
                     <div className="h-px bg-border" />
                     <div className="text-center">
                       <div className="text-5xl font-bold text-red-400 mb-2">40%</div>
-                      <p className="text-muted-foreground">reduction in duplicate tests with The Spine</p>
+                      <p className="text-muted-foreground">reduction in duplicate tests with D.I.N.A</p>
                     </div>
                   </div>
                 </div>
@@ -322,7 +322,7 @@ export default function ForHospitalsPage() {
                   Ready to Transform Your <span className="text-primary glow-text">Hospital</span>?
                 </h2>
                 <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
-                  Join leading hospitals in Ethiopia using The Spine to reduce costs and build trust.
+                  Join leading hospitals in Ethiopia using D.I.N.A to reduce costs and build trust.
                 </p>
                 <Link href="/dashboard/hospital/register">
                   <Button

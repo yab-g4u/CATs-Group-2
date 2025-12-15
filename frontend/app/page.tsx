@@ -34,21 +34,21 @@ export default function Home() {
           const testimonials = [
             {
               quote:
-                "Before The Spine, I spent 15-20 minutes per patient just trying to piece together their medical history from scattered paper records. Now, one QR scan gives me everything instantly. It's transformed how I practice medicine—I can focus on diagnosis and treatment instead of paperwork.",
+                "Before D.I.N.A, I spent 15-20 minutes per patient just trying to piece together their medical history from scattered paper records. Now, one QR scan gives me everything instantly. It's transformed how I practice medicine—I can focus on diagnosis and treatment instead of paperwork.",
               name: "Dr. Tegegne Abiyot",
               role: "Chief Doctor, Tikur Anbessa Hospital",
               image: encodeURI("/Dr.tegegn abiyot.png"),
             },
             {
               quote:
-                "The biggest challenge in our health posts is losing patient records when they move between facilities. The Spine's blockchain storage means we never lose critical information. I've seen it prevent duplicate tests and help us make better treatment decisions with complete patient histories.",
+                "The biggest challenge in our health posts is losing patient records when they move between facilities. D.I.N.A's blockchain storage means we never lose critical information. I've seen it prevent duplicate tests and help us make better treatment decisions with complete patient histories.",
               name: "Dr. Saron Leulkal",
               role: "Health Post Coordinator, Addis Ababa",
               image: encodeURI("/Dr.saron leulkal.png"),
             },
             {
               quote:
-                "As a pediatrician, continuity of care is crucial. When a child comes in with incomplete records, I'm forced to make decisions without full context. The Spine ensures I always have access to vaccination history, previous diagnoses, and medication records—this directly improves patient outcomes.",
+                "As a pediatrician, continuity of care is crucial. When a child comes in with incomplete records, I'm forced to make decisions without full context. D.I.N.A ensures I always have access to vaccination history, previous diagnoses, and medication records—this directly improves patient outcomes.",
               name: "Dr. Rita Tilaye",
               role: "Pediatrician, Addis Ababa Health Center",
               image: encodeURI("/Dr.Rita tilaye.png"),
@@ -63,7 +63,7 @@ export default function Home() {
                     What Doctors <span className="text-primary glow-text">Say</span>
                   </h2>
                   <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                    Early feedback from healthcare providers using The Spine.
+                    Early feedback from healthcare providers using D.I.N.A.
                   </p>
                 </div>
 
@@ -73,7 +73,7 @@ export default function Home() {
                       <p className="text-foreground mb-6 italic text-sm sm:text-base leading-relaxed">&ldquo;{testimonial.quote}&rdquo;</p>
                       <div className="flex items-center gap-4">
                         <Image
-                          src={testimonial.image || "/placeholder.svg"}
+                          src={testimonial.image || "/placeholder.jpg"}
                           alt={testimonial.name}
                           width={48}
                           height={48}
