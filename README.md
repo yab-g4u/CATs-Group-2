@@ -1,7 +1,7 @@
 
 ### A Patient-Centric Medical Record Backbone Powered by Cardano
 
-Spine is a lightweight, patient-first medical record system that ensures critical health information follows the patient — not the hospital.  
+Spine is a lightweight, patient-first medical record system that ensures critical health information follows the patient not the hospital.  
 It eliminates lost paper records, repeated tests, and fragmented care by anchoring medical record verification on the Cardano blockchain.
 
 ---
