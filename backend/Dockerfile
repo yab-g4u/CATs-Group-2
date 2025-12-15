@@ -35,15 +35,5 @@ RUN python manage.py collectstatic --noinput || true
 # Expose port
 EXPOSE 8000
 
-# Health check (lightweight, no external deps)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python - <<EOF || exit 1
-import socket
-s = socket.socket()
-s.settimeout(2)
-s.connect(("127.0.0.1", 8000))
-s.close()
-EOF
-
 # Run migrations and start server
 CMD ["sh", "-c", "python manage.py migrate && gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 120"]
