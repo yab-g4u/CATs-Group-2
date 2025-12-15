@@ -4,7 +4,7 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
-# Set environment variables
+# Environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     DJANGO_SETTINGS_MODULE=core.settings
@@ -16,30 +16,34 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies
-COPY requirements.txt .
+# Copy requirements FIRST (important for caching)
+COPY backend/requirements.txt .
+
+# Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copy project files
-COPY . .
+# Copy Django backend code
+COPY backend/ .
 
-# Create media directory for uploads
+# Create media directories
 RUN mkdir -p media/qrcodes media/lab_results
 
-# Collect static files (if using static files)
+# Collect static files (do not fail build)
 RUN python manage.py collectstatic --noinput || true
 
 # Expose port
 EXPOSE 8000
 
-# Health check
+# Health check (lightweight, no external deps)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8000/api/')" || exit 1
+    CMD python - <<EOF || exit 1
+import socket
+s = socket.socket()
+s.settimeout(2)
+s.connect(("127.0.0.1", 8000))
+s.close()
+EOF
 
 # Run migrations and start server
-CMD ["sh", "-c", "python manage.py migrate && gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120"]
-
-
-
-
+CMD ["sh", "-c", "python manage.py migrate && gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 120"]
